@@ -1,23 +1,24 @@
-var owl;
-var owl2;
-var timeout;
-var timer;
-var videoTimeOut;
 loadMap = false;
-var loadGallery = false;
-var panoIsLoad = false;
-var windowLoad = false;
-var dateTimeNow = new Date();
-var breadCrumbsHeight = $('#bread-crumbs').height();
-var map;
-var firstLoad = true;
-var pageLoad = true;
-var myVar;
-var timeNow = $('#startTime').val();
-var randomHash = 123123;
-var isLoaded = true;
-var offset = 0;
-var userAgent = window.navigator.userAgent;
+
+var owl,
+    owl2,
+    timeout,
+    timer,
+    videoTimeOut,
+    loadGallery = false,
+    panoIsLoad = false,
+    windowLoad = false,
+    dateTimeNow = new Date(),
+    breadCrumbsHeight = $('#bread-crumbs').height(),
+    map,
+    firstLoad = true,
+    pageLoad = true,
+    myVar,
+    timeNow = $('#startTime').val();
+    randomHash = 123123;
+    isLoaded = true;
+    offset = 0;
+    userAgent = window.navigator.userAgent;
 var preloader = '<svg version="1.1" id="loader" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"\
 									   width="40px" height="40px" viewBox="0 0 40 40" enable-background="new 0 0 40 40" xml:space="preserve">\
 									  <path opacity="0.5" fill="#fff" d="M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946\
