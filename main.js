@@ -64,6 +64,7 @@ function priceToString(price) {
     var entity = '<span>' + priceStart + '</span>' + priceEnd;
     return entity;
 }
+//Инициализация Google карты
 function initMapMarker(placeId, elementId) {
     var map = new google.maps.Map(document.getElementById(elementId), {
         center: {lat: 0, lng: 0},
