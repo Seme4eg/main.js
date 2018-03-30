@@ -52,7 +52,7 @@ var smallPreloader = '<svg class="object-loads" id="smallLoader" width="100%" he
 									  <animateTransform attributeName="transform" type="scale" begin="0s" calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s" repeatCount="indefinite"></animateTransform>\
 									</circle>\
 									</g></svg>';
-
+//Форматирование числового значения цены в форматированное для вывода на сайте
 function priceToString(price) {
     var priceString = price.toString();
     var price = priceString.replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ');
@@ -64,7 +64,7 @@ function priceToString(price) {
     var entity = '<span>' + priceStart + '</span>' + priceEnd;
     return entity;
 }
-//Инициализация Google карты
+//Инициализация Google карты по plaiceId
 function initMapMarker(placeId, elementId) {
     var map = new google.maps.Map(document.getElementById(elementId), {
         center: {lat: 0, lng: 0},
@@ -94,6 +94,7 @@ function initMapMarker(placeId, elementId) {
         }
     });
 }
+//запись Cookie в браузер
 function setCookie(name, value, options) {
     options = options || {};
     var expires = options.expires;
@@ -125,6 +126,8 @@ function setCookie(name, value, options) {
 // 	  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(lc, s);
 // 	})();
 // }
+
+//Отключение плеера на сайте
 function stopPlayer() {
     var player = document.getElementById('audio-player');
     var playerBtn = $('.stop-play');
@@ -133,18 +136,18 @@ function stopPlayer() {
         player.pause();
     }
 }
-
+//Получение рондомного числа (Использую в кэшированных ajax запросах)
 function getRandom() {
     return Math.random();
 }
-
+//Показать фильтр в разделе недвижимости
 function OnShowFilters() {
     $('.scroll-wrapper.site-search-results, .show-filters, .search-panel-footer, .sisea-search-form').hide();
     $('.search-panel-header').hide();
     $('.hide-filters, .filters-body, .filters').show();
     $('.filters-body').addClass('active');
 }
-
+//Системные функции панорамы
 function webglAvailable() {
     try {
         var canvas = document.createElement("canvas");
@@ -153,7 +156,6 @@ function webglAvailable() {
         return false;
     }
 }
-
 function getWmodeValue() {
     var webglTest = webglAvailable();
     if (webglTest) {
@@ -161,56 +163,6 @@ function getWmodeValue() {
     }
     return 'opaque';
 }
-
-function addDayNight(img, display) {
-	var imgName = img.replace('indexdata/graphics/compunics-daynight/', '').replace('.png', '');
-	var lang = getUrlVars()["lang"];
-	if(typeof lang === 'undefined'){
-		lang = 'en';
-	}
-	$('#day-night-btn span').remove();
-    $('#day-night-btn').css({
-        "background-image": "url('" + img.replace('indexdata', 'assets').replace('png', 'svg') + "')",
-        "display": display
-    });
-	if(imgName == 'nav_up_with_bad'){
-		$('#day-night-btn').append('<span>' + translation.No_Furniture(lang) + '</span>');
-	}
-	else if(imgName == 'nav_up_no_bad'){
-		$('#day-night-btn').append('<span>' + translation.Furniture(lang) + '</span>');
-	}
-	else if(imgName == 'nav_up_day'){
-		$('#day-night-btn').append('<span>' + translation.Night_Mode(lang) + '</span>');
-	}
-	else if(imgName == 'nav_up_night'){
-		$('#day-night-btn').append('<span>' + translation.Day_Mode(lang) + '</span>');
-	}
-	else if(imgName == 'nav_up_land'){
-		$('#day-night-btn').append('<span>' + translation.D_Model(lang) + '</span>');
-	}
-	else if(imgName == 'nav_up_3d'){
-		$('#day-night-btn').append('<span>' + translation.No_D_Model(lang) + '</span>');
-	}
-	console.log(imgName);
-}
-
-function readDeviceOrientation() {
-    var winH = window.innerHeight ? window.innerHeight : jQuery(window).height();
-    var winW = window.innerWidth ? window.innerWidth : jQuery(window).width();
-    if (!winH || winH == 0) {
-        winH = '100%';
-    }
-    if ($('#search-panel').hasClass('active')) {
-        var left = 0;
-        if (winW > 396) {
-            left = winW - 396;
-        }
-        $('#search-panel').css('left', left + 'px');
-    }
-    jQuery('html').css('height', '100%');
-    window.scrollTo(0, 0);
-}
-
 function accessWebVr() {
     unloadPlayer();
     eventUnloadPlugins();
@@ -218,7 +170,6 @@ function accessWebVr() {
         loadPlayer(true);
     }, 100);
 }
-
 function accessStdVr() {
     unloadPlayer();
     if (!$('#search-panel').hasClass('open')) {
@@ -229,7 +180,6 @@ function accessStdVr() {
         loadPlayer(false);
     }, 100);
 }
-
 function loadPlayer(isWebVr) {
     if (isWebVr) {
         embedpano({
@@ -261,13 +211,11 @@ function loadPlayer(isWebVr) {
         kpanotour.Focus.applyFocus();
     }
 }
-
 function unloadPlayer() {
     if (jQuery('#krpanoSWFObject')) {
         removepano('krpanoSWFObject');
     }
 }
-
 function isVRModeRequested() {
     var querystr = window.location.hash.substring(2);
     var params = querystr.split('&');
@@ -278,7 +226,66 @@ function isVRModeRequested() {
     }
     return false;
 }
+function OnVrMode() {
+    accessWebVr();
+    OnShowHideControls(true, false);
+}
 
+function OnLoadPano(xmlname, sphere) {
+	var panoWindow = document.getElementById("krpanoSWFObject");
+  panoWindow.call("onout();loadpano(" + xmlname + ", startscene=" + sphere + ", MERGE, ZOOMBLEND(0.5, 8.0));");
+	panoWindow.call("blendmode_prepareblendmode");
+	panoWindow.call('stopallsounds');
+}
+//Добавление кнопки День/Ночь, Зима/Лето с нужным переводом (не совсем правильно работает если нет этой кнопки в панораме, нужно делать проверку наличия данной кнопки)
+function addDayNight(img, display) {
+	var imgName = img.replace('indexdata/graphics/compunics-daynight/', '').replace('.png', '');
+	var lang = getUrlVars()["lang"];
+	if(typeof lang === 'undefined'){
+		lang = 'en';
+	}
+	$('#day-night-btn span').remove();
+    $('#day-night-btn').css({
+        "background-image": "url('" + img.replace('indexdata', 'assets').replace('png', 'svg') + "')",
+        "display": display
+    });
+	if(imgName == 'nav_up_with_bad'){
+		$('#day-night-btn').append('<span>' + translation.No_Furniture(lang) + '</span>');
+	}
+	else if(imgName == 'nav_up_no_bad'){
+		$('#day-night-btn').append('<span>' + translation.Furniture(lang) + '</span>');
+	}
+	else if(imgName == 'nav_up_day'){
+		$('#day-night-btn').append('<span>' + translation.Night_Mode(lang) + '</span>');
+	}
+	else if(imgName == 'nav_up_night'){
+		$('#day-night-btn').append('<span>' + translation.Day_Mode(lang) + '</span>');
+	}
+	else if(imgName == 'nav_up_land'){
+		$('#day-night-btn').append('<span>' + translation.D_Model(lang) + '</span>');
+	}
+	else if(imgName == 'nav_up_3d'){
+		$('#day-night-btn').append('<span>' + translation.No_D_Model(lang) + '</span>');
+	}
+}
+//Функция при смене ориентации мобильного устройства
+function readDeviceOrientation() {
+    var winH = window.innerHeight ? window.innerHeight : jQuery(window).height();
+    var winW = window.innerWidth ? window.innerWidth : jQuery(window).width();
+    if (!winH || winH == 0) {
+        winH = '100%';
+    }
+    if ($('#search-panel').hasClass('active')) {
+        var left = 0;
+        if (winW > 396) {
+            left = winW - 396;
+        }
+        $('#search-panel').css('left', left + 'px');
+    }
+    jQuery('html').css('height', '100%');
+    window.scrollTo(0, 0);
+}
+//Кнопка на весь экран
 function fullScreen() {
     var panoWindow = document.getElementById('krpanoSWFObject');
     var $this = $(this);
@@ -292,7 +299,7 @@ function fullScreen() {
         $('.logo').css('z-index', 10000000000);
     }
 }
-
+//Кнопка Гироскопа
 function giroscopeOnOff() {
     var panoWindow = document.getElementById('krpanoSWFObject');
     var $this = $(this);
@@ -304,7 +311,7 @@ function giroscopeOnOff() {
         $this.addClass('active');
     }
 }
-
+//Кнопка Скрытия/Показа пинов на сайте
 function hotspotsHideShow() {
     var panoWindow = document.getElementById('krpanoSWFObject');
     var $this = $(this);
@@ -316,7 +323,7 @@ function hotspotsHideShow() {
         $this.addClass('visible');
     }
 }
-
+//Кнопка Главной панораммы тура либо родительского тура
 function goHome() {
     var panoWindow = document.getElementById('krpanoSWFObject');
     var parentLink = $('#home-btn').attr('data-link');
@@ -339,7 +346,7 @@ function goHome() {
         }
     }
 }
-
+//Кнопка назад(пока вроде не используется, но пригодится)
 function goBack() {
     var panoWindow = document.getElementById('krpanoSWFObject');
     var scene = panoWindow.get("xml.scene");
@@ -356,19 +363,7 @@ function goBack() {
         }
     }
 }
-
-function OnVrMode() {
-    accessWebVr();
-    OnShowHideControls(true, false);
-}
-
-function OnLoadPano(xmlname, sphere) {
-	var panoWindow = document.getElementById("krpanoSWFObject");
-    panoWindow.call("onout();loadpano(" + xmlname + ", startscene=" + sphere + ", MERGE, ZOOMBLEND(0.5, 8.0));");
-	panoWindow.call("blendmode_prepareblendmode");
-	panoWindow.call('stopallsounds');
-}
-
+//Динамическое подключение файлов стилей
 function CSSLoad(file) {
     var link = document.createElement("link");
     link.setAttribute("rel", "stylesheet");
@@ -377,14 +372,13 @@ function CSSLoad(file) {
     link.setAttribute("title", "dynamicLoadedSheet");
     document.getElementsByTagName("head")[0].appendChild(link)
 }
-
+//Форматирование и вывод серверного времени
 function getTime() {
-    var locale = $('html').attr('lang');
     var dateTimeNow = new Date(timeNow);
     $('.time, .mobile-time').text(moment(dateTimeNow).locale('en').format("H:mm"));
     $('.date, .mobile-date').text(moment(dateTimeNow).locale('en').format("ddd., DD MMM"));
 }
-
+//Обновление времени на сайте
 function updateTime() {
     var dateTime = new Date(timeNow);
     var locale = $('html').attr('lang');
@@ -393,6 +387,7 @@ function updateTime() {
     $('.date, .mobile-date').text(dateTimeNow.locale('en').format("ddd., DD MMM"));
     timeNow = dateTimeNow.locale('en').format("MMMM D, YYYY HH:mm:ss");
 }
+//Определение устройства
 var isMobile = {
     Android: function() {
         return navigator.userAgent.match(/Android/i);
@@ -419,25 +414,13 @@ var isMobile = {
         return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
     }
 };
-// if (isMobile.any()) {
-//     var LC_API = LC_API || {};
-//     LC_API.on_chat_window_minimized = function() {
-//         OnShowHideControls(false, false);
-//     };
-//     LC_API.on_chat_window_opened = function() {
-// 		if($('#search-panel').hasClass('open')){
-// 			OnCloseSearchPanel(false);
-// 		}
-//         OnShowHideControls(true, false);
-//     };
-// }
+//Автоматическое открытие панели поиска
 function searchTimeout() {
     timeout = setTimeout(function() {
         OnSearchPanelShow();
-		$('.greeting-box-close-btn').click();
     }, 5000);
 }
-
+//Инициализация карты по координатам
 function initMap(elementId){
     var myLatlng = new google.maps.LatLng($('#search-panel').attr('data-latitude'), $('#search-panel').attr('data-longitude'));
     map = new google.maps.Map(document.getElementById(elementId), {
@@ -453,7 +436,7 @@ function initMap(elementId){
     });
     marker.setMap(map);
 }
-
+//Инициализация карты местонахождения компании(можно объединить с предидущей)
 function initOurLocationMap() {
     var myLatlng = new google.maps.LatLng(7.9927999, 98.3056705);
     map = new google.maps.Map(document.getElementById('ourLocation'), {
@@ -469,7 +452,7 @@ function initOurLocationMap() {
     });
     marker.setMap(map);
 }
-
+//Вставка карты в панель поиска (сейчас уже не используется но присутствует в коде)
 function appendMap(withPlaceId) {
 	var placeId = $('#search-panel').attr('data-place-id');
     $('.search-content').empty().append('<div id="map"></div>');
@@ -483,7 +466,7 @@ function appendMap(withPlaceId) {
 		}
 		}, 500);
 }
-
+//Вывод информационного сообщения на сайте
 function infoMessage(message) {
     $('body').append('<div class="info-message" style="display: none;">' + message + '</div>');
     $('body').queue(function() {
@@ -498,7 +481,7 @@ function infoMessage(message) {
         $('body').dequeue();
     });
 }
-
+//Показать/Скрыть элементы управления панорамы(используется при открытии/закрытии окон на сайте)
 function OnShowHideControls(isHide, isSearch) {
     if (isHide) {
         if (isMobile.any() || !isSearch) {
@@ -514,7 +497,7 @@ function OnShowHideControls(isHide, isSearch) {
         $('.search-tabs, .logo').fadeIn(500);
     }
 }
-
+//Скрытие кнопок шаринга
 function OnCloseShareBtns() {
     if ($("#share-btn").hasClass('open')) {
         $("#share-btn").removeClass('open');
@@ -523,7 +506,7 @@ function OnCloseShareBtns() {
         }, 500).hide('500');
     }
 }
-
+//Скрытие кнопок шаринга в категориях(можно будет объединить с предидущей)
 function OnCloseCategoryShareBtns() {
     if ($("#category-share-btn").hasClass('open')) {
         $("#category-share-btn").removeClass('open');
@@ -532,7 +515,7 @@ function OnCloseCategoryShareBtns() {
         }, 500).hide('500');
     }
 }
-
+//Открытие панели поиска(нужно поудалять лишнее, менялось много связанного функционала, накопился мусор)
 function OnSearchPanelShow() {
   var $this = $(this);
 	var placeId = $('#search-panel').attr('data-place-id');
@@ -569,14 +552,10 @@ function OnSearchPanelShow() {
         $('#search-panel').dequeue();
     });
 }
-
+//Поиск категорий/Обектов при клике на категорию(тоже присутствует ненужный код)
 function OnSearch() {
 	isLoaded = true;
     $('.filters, .filters-body').hide();
-    // if (!isMobile.any()) {
-        // $('.search-panel-header').show();
-        // $('.search-panel-body').css('top', '150px');
-    // }
     var pagetitle = $('#search').val();
     var category = $('.search-logo').attr('data-category');
     var categoryId = parseInt($('.search-logo').attr('data-id'));
@@ -606,7 +585,7 @@ function OnSearch() {
         }, 1000);
     }
 }
-
+//Переключение языка на сайте(раньше было без перезагрузки страницы, но из-за сторонних сервисов чата приходится перезагружать, хотя нужно в поддержке битрикса узнать, может можно менять язык чата динамически, в предидущем сервисе это было невозможно)
 function OnLanguageChange() {
     var $this = $(this);
 	var hashNow = window.location.hash;
@@ -641,11 +620,8 @@ function OnLanguageChange() {
         // GetParentCategories();
     // }
 }
-
+//Ajax загрузка родительских категорий
 function GetParentCategories() {
-    // if (!isMobile.any()) {
-        // $('.search-panel-body').css('top', '150px');
-    // }
     $('.search-logo').attr('data-categoryid', 0).attr('data-isfolder', 1);
     $('.parent-category').remove();
     $('.filters, .filters-body').hide();
@@ -696,7 +672,7 @@ function GetParentCategories() {
         }
     });
 }
-
+//Ajax получение фильтра городов на карте(в разделе недвижимости)
 function GetFilterMap() {
     var cultureKey = getUrlVars()["lang"];
 	if(typeof cultureKey === 'undefined'){
@@ -739,7 +715,7 @@ function GetFilterMap() {
         }
     });
 }
-
+//Ajax загрузка топ объектов
 function GetTopObjects() {
     if (!isMobile.any()) {
         $('.search-panel-header').show();
@@ -791,7 +767,7 @@ function GetTopObjects() {
         }
     });
 }
-
+//Ajax загрузка объектов по фильтру(раздел недвижимости)
 function OnFilterSearch() {
     $('.filters-body, .hide-filters, .search-panel-header').hide();
     $('.filters-body').removeClass('active');
@@ -892,7 +868,7 @@ function OnFilterSearch() {
         }
     });
 }
-
+//Ajax загрузка горячих предложений недвижимости
 function GetHotRealEstates() {
     var searchResults = $('.site-search-results  .search-content');
     var cultureKey = getUrlVars()["lang"];
@@ -959,7 +935,7 @@ function GetHotRealEstates() {
         }
     });
 }
-
+//Ajax загрузка категорий
 function OnCategorySearch(category, categoryId, isFolder, title) {
     if (categoryId == 35) {
         GetHotRealEstates();
@@ -1061,7 +1037,7 @@ function OnCategorySearch(category, categoryId, isFolder, title) {
         });
     }
 }
-
+//Ajax подгрузчик обектов(Изначально загружается 10 объектов при пролистывании запускается эта функция и подгружаются еще 10 объектов ну или сколько есть)
 function OnLoadObjects(category, offset) {
     var cultureKey = getUrlVars()["lang"];
 	if(typeof cultureKey === 'undefined'){
@@ -1219,7 +1195,7 @@ function OnLoadObjects(category, offset) {
         }
     });
 }
-
+//Ajax поиск на сайте
 function OnAjaxSearch(title, OnLoaded, count, exclude) {
     $('.parent-category').remove();
     var searchResults = $('.site-search-results .search-content');
@@ -1306,7 +1282,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
         }
     });
 }
-
+//Ajax загрузка панораммы на сайт
 function getPano(itemId) {
     panoIsLoad = false;
 	clearTimeout(videoTimeOut);
@@ -1332,7 +1308,7 @@ function getPano(itemId) {
         success: function(data) {
             panoUrl = data.panoUrl + 'indexdata/index_messages_en.xml';
             panoVrXml = data.panoUrl + 'indexdata/index_vr.xml';
-			panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
+			      panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
             panoSwf = data.panoUrl + 'indexdata/index.swf';
             crossPanoUrl = data.panoUrl;
             mapTitle = data.longtitle;
@@ -1449,7 +1425,7 @@ function getPano(itemId) {
 		fbq('track','ViewContent',{value:3.50, currency:'USD', content_name: $('title').text()});
     });
 }
-
+//Ajax загрузка случайной панорамы по id категории
 function getPanoByCategoryId(itemId) {
 	clearTimeout(videoTimeOut);
     panoIsLoad = false;
@@ -1538,7 +1514,7 @@ function getPanoByCategoryId(itemId) {
                 $("meta[property='og:image:secure_url']").attr('content', data.image);
                 $("meta[name='twitter:image']").attr('content', data.image);
                 $("meta[property='og:url']").attr('content', window.location.href);
-				$('#home-btn').attr('data-link', mainPanoLink);
+        				$('#home-btn').attr('data-link', mainPanoLink);
                 if (isVRModeRequested()) {
                     accessWebVr();
                 } else {
@@ -1569,7 +1545,7 @@ function getPanoByCategoryId(itemId) {
 		}
     });
 }
-
+//Ajax загрузка и открытие окна информации о компании
 function getAboutInfo(isContacts) {
     $('#info-btn').removeClass('open');
     OnShowHideControls(true, false);
@@ -1642,7 +1618,7 @@ function getAboutInfo(isContacts) {
         loadMap = true;
     });
 }
-
+//Ajax загрузка новостей объекта
 function OnLoadNews(offset) {
     var cultureKey = getUrlVars()["lang"];
 	if(typeof cultureKey === 'undefined'){
@@ -1674,8 +1650,9 @@ function OnLoadNews(offset) {
         panoIsLoad = false;
     });
 }
-
+//Кнопка информации об объекте
 $(document).on('click', '#about-object-btn', function(e){e.stopPropagation();getAboutObjectInfo(false);clearTimeout(timeout);});
+//Ajax загрузка информации об объекте
 function getAboutObjectInfo(showFeedBack){
 	if (!$.cookie('object_info')) {
 		$.cookie('object_info', true, {
@@ -1860,7 +1837,7 @@ function getAboutObjectInfo(showFeedBack){
     $('.about-object-modal').dequeue();
     });
 }
-
+//Ajax загрузка контента объекта(например открытие окна с новостью)
 function getInnerContent() {
     $this = $(this);
     var cultureKey = getUrlVars()["lang"];
@@ -1899,7 +1876,7 @@ function getInnerContent() {
         panoIsLoad = false;
     });
 }
-
+//Ajax загрузка и открытие окна help
 function getHelpInfo(dataId) {
     var cultureKey = getUrlVars()["lang"];
 	if(typeof cultureKey === 'undefined'){
@@ -1929,7 +1906,7 @@ function getHelpInfo(dataId) {
         panoIsLoad = false;
     });
 }
-
+//Закрытие окна О компании
 function OnCloseModal() {
     $('.close-modal-btn, .about-content').hide();
     $('#about-body .our-location, #about-body .privacy-policy').remove();
@@ -1939,7 +1916,7 @@ function OnCloseModal() {
     }, 500);
     OnShowHideControls(false, false);
 }
-
+//Закрытие панели поиска
 function OnCloseSearchPanel(isAnimate) {
     OnCloseCategoryShareBtns();
     $('.wrap_mW._show_1e._orinationLeft_3O').show();
@@ -1967,7 +1944,7 @@ function OnCloseSearchPanel(isAnimate) {
     $('.search-panel-content').hide();
     $('#search-panel').removeClass('open');
 }
-
+//Закрытие окна Видео объекта
 function OnCloseVideoModal() {
     var panoWindow = document.getElementById('krpanoSWFObject');
     panoWindow.call('showpanospotsaction');
@@ -1979,7 +1956,7 @@ function OnCloseVideoModal() {
     OnShowHideControls(false, false);
     $('#video-iframe iframe').attr('src', '');
 }
-
+//Закрытие окна контента
 function OnCloseInnerModal() {
     $('.inner-content-close-btn, .inner-content').hide();
     $('.inner-content').empty();
@@ -1990,7 +1967,7 @@ function OnCloseInnerModal() {
         bottom: '50%'
     }, 500);
 }
-
+//Закрытие окна информации об объекте
 function OnCloseAboutObjectModal() {
     $('.owl-navigation .owl-prev, .owl-navigation .owl-next, #booking-block .special-offer').remove();
     $('#news-block, .object-location').empty().removeClass('col-sm-6');
@@ -2002,7 +1979,7 @@ function OnCloseAboutObjectModal() {
     OnShowHideControls(false, false);
     $('.owl-main, .owl-navigation-body .owl-stage, #gallery-block .object-content, #aboutObjectTitle').empty();
 }
-
+//Закрытие окна помощи
 function OnCloseHelpModal() {
     $('.help-content').empty();
     $('.help-content-close-btn, .help-content').hide();
@@ -2011,7 +1988,7 @@ function OnCloseHelpModal() {
     }, 500);
     OnShowHideControls(false, false);
 }
-
+//получение значения параметра ссылки
 function getUrlVars() {
     var vars = [],
         hash;
@@ -2023,6 +2000,7 @@ function getUrlVars() {
     }
     return vars;
 }
+//Функция изменения hash ссылки
 $(window).on('hashchange', function() {
     var categoryHashId = getUrlVars()["c"];
     var languageKey = getUrlVars()["lang"];
@@ -2037,6 +2015,7 @@ $(window).on('hashchange', function() {
         OnSearchPanelShow();
     }
 });
+//Функция по завершению ajax загрузки
 $(document).ajaxComplete(function() {
     if (panoIsLoad) {
         xmlParser(panoVrXml);
@@ -2054,9 +2033,9 @@ $(document).ajaxComplete(function() {
         var scrollBodyHeight = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-element_outer').height());
         var scrollBarHeight = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-bar').height());
         var scrollBarPosition = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-bar').css('top'));
-		var exclude = GetExludeObjects(true);
-		var count = getObjectsCount();
-		var title = $('#search').val();
+		    var exclude = GetExludeObjects(true);
+		    var count = getObjectsCount();
+		    var title = $('#search').val();
         if ((scrollBarHeight + scrollBarPosition) == scrollBodyHeight && isLoaded && scrollBodyHeight > 100) {
             isLoaded = false;
 			if(title.length > 1){
@@ -2068,7 +2047,7 @@ $(document).ajaxComplete(function() {
         }
     });
 });
-
+//Получение координат панораммы из xml файла
 function xmlParser(xmlUrl) {
     $.ajax({
         type: "GET",
@@ -2077,14 +2056,15 @@ function xmlParser(xmlUrl) {
         success: function(xml) {
             var xmlLatitude = $(xml).find("scene").attr('latitude');
             var xmlLongitude = $(xml).find("scene").attr('longitude');
-			if(typeof xmlLatitude == 'undefined'){xmlLatitude = 0}
-			if(typeof xmlLongitude == 'undefined'){xmlLongitude = 0}
+			      if(typeof xmlLatitude == 'undefined'){xmlLatitude = 0}
+			      if(typeof xmlLongitude == 'undefined'){xmlLongitude = 0}
             $('#search-panel').attr('data-latitude', xmlLatitude).attr('data-longitude', xmlLongitude);
         }
     }).done(function() {
         panoIsLoad = false;
     });
 }
+//Получение языка браузера пользователя
 function getLanguage(){
   var lang = navigator.language;
   var output;
@@ -2097,6 +2077,7 @@ function getLanguage(){
   }
   return lang.substr(0,2);
 }
+//Функция загрузки страницы(отсюда нужно вынести все обработчики кликов по кнопкам и наверно собрать их в отдельный файл)
 function OnDocumentReady() {
     $(".feed-back-form form").submit(function() {
         var elem = $(".feed-back-form form input, .feed-back-form form select");
@@ -2132,7 +2113,7 @@ function OnDocumentReady() {
 											<div class="animation-background red"></div>\
 											<div class="btn-animation red"></div>');
     }, 10000);
-	var windowSearch = window.location.search;
+	  var windowSearch = window.location.search;
     if (windowSearch.indexOf('?_escaped_fragment_=') != 0) {
         if (window.location.hash == '' || typeof window.location.hash == 'undefined' || window.location.hash == null) {
             window.location.hash = defaultPano + '&lang=' + getLanguage();
@@ -2678,6 +2659,7 @@ function OnDocumentReady() {
         var startPoint = {};
         var nowPoint;
         var ldelay;
+        //Функции слайда окон на мобильных девайсах
         panel.addEventListener('touchstart', function(event) {
             if (!$('#filters-body').hasClass('active')) {
                 startPoint.x = event.changedTouches[0].pageX;
@@ -2998,6 +2980,7 @@ function OnDocumentReady() {
     }
 }
 $(document).ready(OnDocumentReady);
+//Функция когда страница загружена
 $(window).load(function() {
 	if(isMobile.AndroidApp() || isMobile.iOSApp()){
 		$('#fullScreen-btn').parent('li').hide();
@@ -3029,14 +3012,15 @@ $(window).load(function() {
     CSSLoad('https://thai360.info/assets/css/bootstrap.css');
     CSSLoad('https://thai360.info/assets/css/jquery.scrollbar.css');
     CSSLoad('https://thai360.info/assets/css/main.css?' + getRandom());
-	getBtnTranslations(cultureKey);
+    //Получение переводов
+	   getBtnTranslations(cultureKey);
     if ((typeof categoryId === 'undefined' || categoryId === null) && (parseInt($('.search-logo').attr('data-id')) != 35)) {
         GetTopObjects();
     } else {
         OnSearchPanelShow();
         $('.back').attr('data-id', 1220).attr('data-search-id', 1220);
     }
-	//initLiveChat();
+	//Инициализация битрикса
 	BitrixChatInit(cultureKey);
 	if (!$.cookie('using_cookies')) {
         setTimeout(function() {
@@ -3051,6 +3035,7 @@ $(window).load(function() {
     GetFilterMap();
 	//setTimeout(function(){firstLoad = false;}, 1000);
 });
+//Получение значений ползунков Цены
 function getPrices(min, max, step) {
     $("#slider-range").slider({
         range: true,
@@ -3066,7 +3051,7 @@ function getPrices(min, max, step) {
     $("#priceMin").html(priceToString($("#slider-range").slider("values", 0)));
     $("#priceMax").html(priceToString($("#slider-range").slider("values", 1)));
 };
-
+//Получение значений ползунков Кол-ва кроватей
 function getBeds(min, max) {
     $("#slider-beds").slider({
         range: true,
@@ -3082,7 +3067,7 @@ function getBeds(min, max) {
     $("#bedMin").html($("#slider-beds").slider("values", 0));
     $("#bedMax").html($("#slider-beds").slider("values", 1));
 };
-
+//Получение цены согласно выбранной валюты
 function getPricesByCurrency(value) {
     var currency = $('#currency-select .select-active').attr('data-currency');
     var entity;
@@ -3102,7 +3087,7 @@ function getPricesByCurrency(value) {
     }
     return Math.round(entity);
 }
-
+//Получение символа валюты
 function getCurrencySymbol() {
     var currency = $('#currency-select .select-active').attr('data-currency');
     var entity;
@@ -3122,7 +3107,7 @@ function getCurrencySymbol() {
     }
     return entity;
 }
-
+//Получение строки id-шников выбранных районов в фильтре
 function getDistrictArray() {
     var checkedDistricts = [];
     $('.districts p label input:checked').each(function() {
@@ -3134,7 +3119,7 @@ function getDistrictArray() {
     }
     return checkedDistricts;
 }
-
+//Получение кол-ва подгруженных обеъктов в окне поиска
 function getObjectsCount() {
     var count = 0;
     $('#site-search-results .sisea-result.offset').each(function() {
@@ -3142,7 +3127,7 @@ function getObjectsCount() {
     });
     return count;
 }
-
+//Получение строки id-шников загруженных объектов для исключения их при подгрузке объектов при пролистывании
 function GetExludeObjects(forSearch) {
     var excludeObjects = [];
     $('.category-list .sisea-result a').each(function() {
@@ -3162,6 +3147,7 @@ function GetExludeObjects(forSearch) {
 	}
     return excludeObjects;
 }
+//Инициализация битрикс чата
 function BitrixChatInit(lang){
 	var key = (lang == 'en' || lang == 'th' ) ? '2_tlmkb7' : (lang == 'ru') ? '4_w1ro7v' : (lang == 'zh') ? '6_e7jx3s' : '2_tlmkb7';
 	(function(w,d,u){
