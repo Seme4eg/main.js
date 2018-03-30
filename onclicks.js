@@ -24,7 +24,7 @@ function OnDocumentReady() {
             window.location.href = 'https://thai360.info/message-sent?redirect=' + oldHref;
         }
     });
-    getPrices(priceSaleMin, priceSaleMax, getPricesByCurrency(100000));
+    getPrices(priceSaleMin, priceSaleMax, getPricesAndSymbol(100000));
     getBeds(0, 15);
     setInterval(function() {
         updateTime();
@@ -97,21 +97,21 @@ function OnDocumentReady() {
         event.stopPropagation();
         $('.radio-btns .select-list').hide();
         $('.priceFilter h4').text(translation.Price_Rate(getUrlVars()["lang"]));
-        getPrices(getPricesByCurrency(priceSaleMin), getPricesByCurrency(priceSaleMax), getPricesByCurrency(100000));
+        getPrices(getPricesAndSymbol(priceSaleMin), getPricesAndSymbol(priceSaleMax), getPricesAndSymbol(100000));
         GetFilterMap();
     });
     $(document).on('click', '#daily-rent', function(event) {
         event.stopPropagation();
         $('.radio-btns .select-list').hide();
         $('.priceFilter h4').text(translation.Daily_Rate(getUrlVars()["lang"]));
-        getPrices(getPricesByCurrency(priceRentDailyMin), getPricesByCurrency(priceRentDailyMax), getPricesByCurrency(100));
+        getPrices(getPricesAndSymbol(priceRentDailyMin), getPricesAndSymbol(priceRentDailyMax), getPricesAndSymbol(100));
         GetFilterMap();
     });
     $(document).on('click', '#monthly-rent', function(event) {
         event.stopPropagation();
         $('.radio-btns .select-list').hide();
         $('.priceFilter h4').text(translation.Monthly_Rate(getUrlVars()["lang"]));
-        getPrices(getPricesByCurrency(priceRentMonthlyMin), getPricesByCurrency(priceRentMonthlyMax), getPricesByCurrency(500));
+        getPrices(getPricesAndSymbol(priceRentMonthlyMin), getPricesAndSymbol(priceRentMonthlyMax), getPricesAndSymbol(500));
         GetFilterMap();
     });
     $(document).on('click', '#currency-select .select-active', function() {
@@ -129,13 +129,13 @@ function OnDocumentReady() {
         $this.parent('li').hide();
         $('#currency-select ul').hide().removeClass('open');
         if ($('#sale-input').hasClass('active')) {
-            getPrices(getPricesByCurrency(parseInt(priceSaleMin)), getPricesByCurrency(parseInt(priceSaleMax)), getPricesByCurrency(100000))
+            getPrices(getPricesAndSymbol(parseInt(priceSaleMin)), getPricesAndSymbol(parseInt(priceSaleMax)), getPricesAndSymbol(100000))
         }
         if ($('.radio-btns .select label').hasClass('active') && $('#daily-rent input').prop('checked')) {
-            getPrices(getPricesByCurrency(parseInt(priceRentDailyMin)), getPricesByCurrency(parseInt(priceRentDailyMax)), getPricesByCurrency(100))
+            getPrices(getPricesAndSymbol(parseInt(priceRentDailyMin)), getPricesAndSymbol(parseInt(priceRentDailyMax)), getPricesAndSymbol(100))
         }
         if ($('.radio-btns .select label').hasClass('active') && $('#monthly-rent input').prop('checked')) {
-            getPrices(getPricesByCurrency(parseInt(priceRentMonthlyMin)), getPricesByCurrency(parseInt(priceRentMonthlyMax)), getPricesByCurrency(500))
+            getPrices(getPricesAndSymbol(parseInt(priceRentMonthlyMin)), getPricesAndSymbol(parseInt(priceRentMonthlyMax)), getPricesAndSymbol(500))
         }
     });
     $(document).on('click', '#type-select .select-active', function() {
@@ -216,7 +216,7 @@ function OnDocumentReady() {
     $(document).on('click', '.filter-clear-btn', function(e) {
         e.preventDefault();
         var clearType = $('#type-select ul li:first-child a');
-        getPrices(getPricesByCurrency(priceSaleMin), getPricesByCurrency(priceSaleMax), getPricesByCurrency(100000));
+        getPrices(getPricesAndSymbol(priceSaleMin), getPricesAndSymbol(priceSaleMax), getPricesAndSymbol(100000));
         $('#type-select .select-active').html(clearType.text()).attr('data-categoryid', clearType.attr('data-categoryid'));
         $('#type-select .select-list li').show();
         $('#type-select .select-list li:first-child').hide();
