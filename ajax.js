@@ -1255,10 +1255,7 @@ function getInnerContent() {
 }
 //Ajax загрузка и открытие окна help
 function getHelpInfo(dataId) {
-    var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
+    var cultureKey = getUrlVars()["lang"] || 'en';
     OnShowHideControls(true, false);
     var helpContainer = $('.help-content');
     $('.help-content-close-btn, .help-content').fadeIn(500);

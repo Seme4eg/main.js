@@ -66,12 +66,5 @@ function appendMap(withPlaceId) {
 	var placeId = $('#search-panel').attr('data-place-id');
     $('.search-content').empty().append('<div id="map"></div>');
     $('.back').attr('data-id', 1220).attr('data-search-id', 1220);
-    setTimeout(function(){
-		if(withPlaceId){
-			initMapMarker(placeId, 'map');
-		}
-		else{
-			initMap('map');
-		}
-		}, 500);
+    setTimeout( () => withPlaceId ? initMapMarker(placeId, 'map') : initMap('map'), 500);
 }
