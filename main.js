@@ -58,11 +58,10 @@ function priceToString(price) {
     var price = priceString.replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ');
     var priceStart = price.split(' ')[0];
     var priceEnd = price.replace(priceStart, '');
-    if (priceEnd === undefined) {
+    if (priceEnd === undefined)
         priceEnd = '';
-    }
-    var entity = '<span>' + priceStart + '</span>' + priceEnd;
-    return entity;
+
+    return '<span>' + priceStart + '</span>' + priceEnd;;
 }
 
 //запись Cookie в браузер
@@ -113,28 +112,20 @@ function webglAvailable() {
     }
 }
 function getWmodeValue() {
-    var webglTest = webglAvailable();
-    if (webglTest) {
-        return 'direct';
-    }
-    return 'opaque';
+    return webglAvailable() ? 'direct' : 'opaque';
 }
 function accessWebVr() {
     unloadPlayer();
     eventUnloadPlugins();
-    setTimeout(function() {
-        loadPlayer(true);
-    }, 100);
+    setTimeout(() => loadPlayer(true), 100);
 }
 function accessStdVr() {
     unloadPlayer();
-    if (!$('#search-panel').hasClass('open')) {
+    if (!$('#search-panel').hasClass('open')) 
         OnShowHideControls(false, false);
-    }
+
     resetValuesForPlugins();
-    setTimeout(function() {
-        loadPlayer(false);
-    }, 100);
+    setTimeout(() => loadPlayer(false), 100);
 }
 function loadPlayer(isWebVr) {
     if (isWebVr) {
@@ -163,23 +154,17 @@ function loadPlayer(isWebVr) {
             html5: "always"
         });
     }
-    if (top.location === self.location) {
+    if (top.location === self.location)
         kpanotour.Focus.applyFocus();
-    }
 }
 function unloadPlayer() {
-    if (jQuery('#krpanoSWFObject')) {
+    if (jQuery('#krpanoSWFObject'))
         removepano('krpanoSWFObject');
-    }
 }
 function isVRModeRequested() {
     var querystr = window.location.hash.substring(2);
-    var params = querystr.split('&');
-    for (var i = 0; i < params.length; i++) {
-        if (params[i].toLowerCase() == "vr") {
-            return true;
-        }
-    }
+    for (let val of querystr.split('&'))
+        if (params[i].toLowerCase() == "vr") return true
     return false;
 }
 function OnVrMode() {
@@ -435,8 +420,8 @@ function getUrlVars() {
     var vars = [],
         hash;
     var hashes = window.location.href.slice(window.location.href.indexOf('#') + 2).split('&');
-    for (var i = 0; i < hashes.length; i++) {
-        hash = hashes[i].split('=');
+    for (let val of hashes) {
+        hash = val.split('=');
         vars.push(hash[0]);
         vars[hash[0]] = hash[1];
     }
@@ -446,9 +431,8 @@ function getUrlVars() {
 $(window).on('hashchange', function() {
     var categoryHashId = getUrlVars()["c"];
     var languageKey = getUrlVars()["lang"];
-    if (languageKey != '' || languageKey != 'undefined' || languageKey != null) {
+    if (languageKey != '' || languageKey != 'undefined' || languageKey != null)
         $('html').attr('lang', languageKey);
-    }
     if (typeof categoryHashId === 'undefined' || categoryHashId === null) {
         getPano(getUrlVars()["p"].split('-')[0]);
     } else {
