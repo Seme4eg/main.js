@@ -85,19 +85,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     $(document).on('click', '.roomsFilter label', function(e) {
         e.preventDefault();
-        var $this = $(this); // is needed?
+        let $this = $(this); // is needed?
         $('.roomsFilter input').each(function() {
             if (parseInt($this.find('input').val()) >= parseInt($(this).val())) {
                 $(this).parent('label').addClass('active');
-            } else {
+            } else
                 $(this).parent('label').removeClass('active');
-            }
         });
         $('.roomsFilter input:checked').prop('checked', false);
         $this.find('input').prop('checked', true);
     });
     $(".roomsFilter label").mouseover(roomsFilterMouseOver).mouseout(function() {
-        var $this = $(this);
+        let $this = $(this);
         $('.roomsFilter label').removeClass('room-hover').removeClass('room-no-hover');
         if (parseInt($('.roomsFilter input:checked').val()) == 50) {
             $('.roomsFilter h5 i').text(8 + '+');
@@ -109,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     $(document).on('click', '.filter-clear-btn', filterCleanBtn);
     $(document).on('click', '.radio-btns p label', function() {
-        var $this = $(this);
+        let $this = $(this);
         $('.radio-btns p label').removeClass('active');
         $this.addClass('active');
     });
@@ -156,7 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     $(document).on('keyup', '.sisea-search-form input', function(e){
 		let btnCode = e.keyCode;
-		if(btnCode == 16 || btnCode == 17 || btnCode == 18){}else{OnSearch();}
+        if (btnCode != 16 && btnCode != 17 && btnCode != 18)
+            OnSearch();
 	});
     $(document).on('click', '#category-search-btn', function() {
 		$('.category-search-btn div').remove();
@@ -245,8 +245,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Listen for orientation changes
 		window.addEventListener("orientationchange", function() {
-			var deviceHeight = isMobile.AndroidApp() || isMobile.iOSApp() ? screen.height : window.innerHeight;
-			var deviceWidth = isMobile.AndroidApp() || isMobile.iOSApp() ? screen.width : window.innerWidth;
+			let deviceHeight = isMobile.AndroidApp() || isMobile.iOSApp() ? screen.height : window.innerHeight;
+			let deviceWidth = isMobile.AndroidApp() || isMobile.iOSApp() ? screen.width : window.innerWidth;
 			$('#modalMap').css({'height': deviceHeight, 'width': deviceWidth});
         }, false);
         
@@ -263,19 +263,22 @@ document.addEventListener('DOMContentLoaded', function() {
         aboutObjectBtn.addEventListener('touchmove', function(event) {
 			event.preventDefault();
             if (event.targetTouches.length == 1) {
-                let touch = event.targetTouches[0];
-                let moveX = touch.pageX - touchOffsetX;
+                let touch = event.targetTouches[0],
+                    moveX = touch.pageX - touchOffsetX;
+
                 aboutObjectBtn.style.left = moveX + 'px';
                 aboutObjectModal.style.right = (window.innerWidth + 15 - moveX) + 'px';
             }
         }, false);
 
         helpModal.addEventListener('touchmove', function(event) {
-            var otk = {};
+            let otk = {};
+
             nowPoint = event.changedTouches[0];
             otk.x = nowPoint.pageX - startPoint.x;
             otk.y = nowPoint.pageY - startPoint.y;
-            var left = otk.x;
+            let left = otk.x;
+
             if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
                 helpModal.style.right = (left * (-1)) + 'px';
                 helpModal.style.left = left + 'px';
@@ -289,26 +292,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- functions - handlers ---
         function panelTouchMove (event) {
             if (!$('#filters-body').hasClass('active')) {
-                let otk = {};
                 nowPoint = event.changedTouches[0];
-                otk.x = nowPoint.pageX - startPoint.x;
-                otk.y = nowPoint.pageY - startPoint.y;
+
+                let otk = {
+                    x: nowPoint.pageX - startPoint.x,
+                    y: nowPoint.pageY - startPoint.y
+                };
+                
                 let left = window.innerWidth > 396 ? window.innerWidth - (396 - otk.y) : otk.x;
-                if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
-                    //event.preventDefault();
-                    //event.stopPropagation();
+
+                if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5))
                     panel.style.left = left + 'px';
-                }
             }
         }
         
         function panelTouchEnd (event) {
             if (!$('#filters-body').hasClass('active')) {
-                var pdelay = new Date();
                 nowPoint = event.changedTouches[0];
-                var xAbs = Math.abs(startPoint.x - nowPoint.pageX);
-                var yAbs = Math.abs(startPoint.y - nowPoint.pageY);
-                var left = window.innerWidth > 396 ? window.innerWidth - 396 : 0;
+
+                let pdelay = new Date(),
+                    xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+                    yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+                    left = window.innerWidth > 396 ? window.innerWidth - 396 : 0;
+
                 if ((xAbs > 20 || yAbs > 20)) {
                     if (xAbs > (yAbs * 5)) {
                         if (xAbs > 130) {
@@ -364,10 +370,11 @@ document.addEventListener('DOMContentLoaded', function() {
         function aboutObjectBtnHandler(event){
 			event.preventDefault();
             if (event.changedTouches.length == 1) {
-                var widthNow = parseInt(aboutObjectModal.style.right);
+                let widthNow = parseInt(aboutObjectModal.style.right);
                 if ((window.innerWidth - widthNow) >= 130) {
                     aboutObjectBtn.style.left = 15 + 'px';
-                    getAboutObjectInfo(false);clearTimeout(timeout);
+                    getAboutObjectInfo(false);
+                    clearTimeout(timeout);
                 } else {
                     $('#about-object-btn').animate({
                         left: 15
@@ -380,11 +387,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function videoModalTouchMove(event) {
-            let otk = {};
             nowPoint = event.changedTouches[0];
-            otk.x = nowPoint.pageX - startPoint.x;
-            otk.y = nowPoint.pageY - startPoint.y;
+
+            let otk = {
+                x: nowPoint.pageX - startPoint.x,
+                y: nowPoint.pageY - startPoint.y
+            };
+
             let left = otk.x;
+
             if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
                 videoModal.style.right = (left * (-1)) + 'px';
                 videoModal.style.left = left + 'px';
@@ -392,11 +403,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function videoModalTouchEnd(event) {
-            let pdelay = new Date();
             nowPoint = event.changedTouches[0];
-            let xAbs = Math.abs(startPoint.x - nowPoint.pageX);
-            let yAbs = Math.abs(startPoint.y - nowPoint.pageY);
-            let right = '100%';
+
+            let pdelay = new Date(),
+                xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+                yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+                right = '100%';
+
             if ((xAbs > 20 || yAbs > 20)) {
                 if (xAbs > (yAbs * 5)) {
                     if (xAbs > 130) {
@@ -430,11 +443,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function aboutUsTouchMove(event) {
-            let otk = {};
             nowPoint = event.changedTouches[0];
-            otk.x = nowPoint.pageX - startPoint.x;
-            otk.y = nowPoint.pageY - startPoint.y;
+
+            let otk = {
+                x = nowPoint.pageX - startPoint.x,
+                y = nowPoint.pageY - startPoint.y
+            };
+
             let left = otk.x;
+
             if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
                 aboutUsModal.style.right = (left * (-1)) + 'px';
                 aboutUsModal.style.left = left + 'px';
@@ -442,11 +459,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function aboutUsTouchEnd(event) {
-            let pdelay = new Date();
             nowPoint = event.changedTouches[0];
-            let xAbs = Math.abs(startPoint.x - nowPoint.pageX);
-            let yAbs = Math.abs(startPoint.y - nowPoint.pageY);
-            let right = '100%';
+
+            let pdelay = new Date(),
+                xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+                yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+                right = '100%';
+
             if ((xAbs > 20 || yAbs > 20)) {
                 if (xAbs > (yAbs * 5)) {
                     if (xAbs > 130) {
@@ -481,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function btnTouchStart(event) {
             if (event.targetTouches.length == 1) {
-                var touch = event.targetTouches[0];
+                let touch = event.targetTouches[0];
                 touchOffsetX = touch.pageX - touch.target.offsetLeft;
             }
         }
@@ -498,6 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var xAbs = Math.abs(startPoint.x - nowPoint.pageX);
             var yAbs = Math.abs(startPoint.y - nowPoint.pageY);
             var right = '100%';
+            
             if ((xAbs > 20 || yAbs > 20)) {
                 if (xAbs > (yAbs * 5)) {
                     if (xAbs > 130) {
@@ -529,26 +549,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
+
+        //Закрытие окна помощи
+        function OnCloseHelpModal() {
+            $('.help-content').empty();
+            $('.help-content-close-btn, .help-content').hide();
+            $('.help-modal').animate({
+                left: '100%'
+            }, 500);
+            OnShowHideControls(false, false);
+        }
         
     }
 });
 
 function feedBackForm() {
-    var elem = $(".feed-back-form form input, .feed-back-form form select");
-    var foc;
-    var error = false;
+    var elem = $(".feed-back-form form input, .feed-back-form form select"),
+        foc,
+        error = false,
+        oldHref = window.location.href;
+
     elem.each(function(index) {
         if ($(this).hasClass('required')) {
             if (!this.value || this.value == this.defaultValue) {
                 $(this).addClass("error");
                 error = true;
                 foc = $(this).attr("id");
-            } else {
+            } else
                 $(this).removeClass("error");
-            }
         }
     });
-    var oldHref = window.location.href;
     if (error) {
         $('#' + foc).focus();
         return false;
@@ -573,7 +603,8 @@ function dayNightBtn () {
 }
 
 function currencySelection () {
-    var $this = $(this); // может this?
+    var $this = $(this);
+
     $('#currency-select li').show();
     $('#currency-select .select-active').html($this.attr('data-currency')).attr('data-currency', $this.attr('data-currency'));
     $('.price-currency').text($this.attr('data-currency'));
@@ -593,6 +624,7 @@ function typeSelection () {
     $('#type-select .select-active').html($this.text()).attr('data-categoryId', $this.attr('data-categoryId'));
     $this.parent('li').hide();
     $('#type-select ul').hide().removeClass('open');
+
     if ($this.attr('data-categoryid') == '327-land') {
         $('.roomsFilter').hide();
         getBeds(0, 15);
@@ -632,12 +664,13 @@ function districtsHandler () {
 }
 
 function videoObjectBtn () {
-    let panoWindow = document.getElementById('krpanoSWFObject');
-    let videoContainer = $('.video-modal-content');
-    let youtubeKey = $(this).attr('data-code');
+    let panoWindow = document.getElementById('krpanoSWFObject'),
+        videoContainer = $('.video-modal-content'),
+        youtubeKey = $(this).attr('data-code'),
+        dataId = getUrlVars()["p"].split('-')[0];
+
     panoWindow.call('hidepanospotsaction');
     panoWindow.call('stopallsounds');
-    let dataId = getUrlVars()["p"].split('-')[0];
     if (!$.cookie('video_' + dataId)) {
         setCookie('video_' + dataId, true, {
             path: '/',
@@ -662,8 +695,9 @@ function videoObjectBtn () {
 
 function categoryList () {
     isLoaded = true;
-    var $this = $(this);
-    var lastLevel = false;
+    let $this = $(this),
+        lastLevel = false;
+
     if (!$this.parent().hasClass('last-level')) {
         lastLevel = true;
     }
@@ -721,17 +755,21 @@ function categoryShareBtn () {
 }
 
 function backHandler () {
-    $('#search').val('');
     isLoaded = true;
+    let $this = $(this),
+        lastLevel = false;
+
+    $('#search').val('');
     $('.search-logo').attr('data-isfilter', 0);
-    var $this = $(this);
     $('.main-categories').show();
     $('.show-filters').hide();
+
     if (isMobile.any())
         $('.search-time').show();
+
     $('#search-input').removeClass('filter-search');
     $('#site-search-results').parent('div').removeClass('estate-content');
-    var lastLevel = false;
+
     if ($(this).attr('data-id') == '0') {
         OnCloseSearchPanel(true);
     } else {
@@ -760,9 +798,10 @@ function languageActive () {
 }
 
 function stopPlay () {
-    let $this = $(this);
-    let player = document.getElementById('audio-player');
-    let playList = $('.play-list');
+    let $this = $(this),
+        player = document.getElementById('audio-player'),
+        playList = $('.play-list');
+
     if ($this.hasClass('active')) {
         $this.removeClass('active').css('background-image', 'url(/assets/images/play_music_icon.svg)');
         player.pause();
@@ -820,13 +859,83 @@ function filterCleanBtn(e) {
 }
 
 function nextNew() {
-    var offset = parseInt($(this).attr('data-offset'));
-    var prevOffset = parseInt($('.prev-new').attr('data-offset'));
-    var count = parseInt($('.about-block.block-2 h3').attr('data-count'));
+    let offset = parseInt($(this).attr('data-offset')),
+        prevOffset = parseInt($('.prev-new').attr('data-offset')),
+        count = parseInt($('.about-block.block-2 h3').attr('data-count'));
+    
     if (offset < count) {
         OnLoadNews(offset);
         $(this).attr('data-offset', offset + 3);
         if ((count - offset) > 0)
             $('.prev-new').attr('data-offset', prevOffset + 3);
     }
+}
+
+//Закрытие панели поиска
+function OnCloseSearchPanel(isAnimate) {
+    OnCloseCategoryShareBtns();
+    $('.wrap_mW._show_1e._orinationLeft_3O').show();
+    close = false;
+    clearTimeout(timeout);
+    $('#search').val('');
+    $('#category-search-btn, #map-search-btn').removeClass('open').removeClass('active');
+    $('#mobile-category-search-btn, #mobile-map-search-btn').removeClass('active');
+    OnShowHideControls(false, true);
+    if (isAnimate) {
+        $('#search-panel').css("left", "auto");
+        $('#search-panel').animate({
+            width: 0
+        }, 500);
+    } else {
+        $('#search-panel').css({
+            "width": "0px"
+        });
+        setTimeout(function() {
+            $('#search-panel').css({
+                "left": "auto"
+            });
+        }, 500);
+    }
+    $('.search-panel-content').hide();
+    $('#search-panel').removeClass('open');
+}
+
+//Поиск категорий/Обектов при клике на категорию(тоже присутствует ненужный код)
+function OnSearch() {
+    isLoaded = true;
+
+    let pagetitle = $('#search').val(),
+        category = $('.search-logo').attr('data-category'),
+        categoryId = parseInt($('.search-logo').attr('data-id')),
+        isFolder = $('.search-logo').attr('data-isfolder');
+    
+    $('.filters, .filters-body').hide();
+    
+    if (parseInt(isFolder) == 0) isFolder = false;
+    else isFolder = true;
+
+    window.clearTimeout(timer);
+    if (pagetitle.length > 1) {
+        timer = setTimeout(function() {
+            OnAjaxSearch(pagetitle, false, 0, 0);
+        }, 1000);
+    } else {
+        $('.search-content').empty();
+        timer = setTimeout(function() {
+            if ($('#map-search-btn').hasClass('active')) {
+                appendMap(false);
+            } else if (categoryId == 0)
+                GetTopObjects();
+            else OnCategorySearch(category, categoryId, isFolder, '');
+        }, 1000);
+    }
+}
+
+//Переключение языка на сайте(раньше было без перезагрузки страницы, но из-за сторонних сервисов чата приходится перезагружать, хотя нужно в поддержке битрикса узнать, может можно менять язык чата динамически, в предидущем сервисе это было невозможно)
+function OnLanguageChange() {
+    var $this = $(this),
+	    hashNow = window.location.hash;
+    contextKey = $this.data('key');
+    window.location.hash = hashNow.replace(hashNow.substr(-7,7), 'lang=' + contextKey);
+    setTimeout( () => window.location.reload(true), 0);
 }

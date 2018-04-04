@@ -101,10 +101,12 @@ document.addEventListener('DOMContentLoaded', function () {
     CSSLoad('https://thai360.info/assets/css/bootstrap.css');
     CSSLoad('https://thai360.info/assets/css/jquery.scrollbar.css');
     CSSLoad('https://thai360.info/assets/css/main.css?' + getRandom());
+
     //Получение переводов
-	   getBtnTranslations(cultureKey);
+    getBtnTranslations(cultureKey); // где definition этой ф-ии?
+    
     if (!categoryId && (parseInt($('.search-logo').attr('data-id')) != 35)) {
-        GetTopObjects();
+        GetTopObjects(); // definition in ajax.js
     } else {
         OnSearchPanelShow();
         $('.back').attr('data-id', 1220).attr('data-search-id', 1220);
@@ -116,8 +118,8 @@ document.addEventListener('DOMContentLoaded', function () {
 	if(categoryId || parseInt(panoId) == 26)
 		searchTimeout();
 
-    GetParentCategories();
-    GetFilterMap();
+    GetParentCategories(); // ajax.js
+    GetFilterMap(); // ajax.js
     //setTimeout(function(){firstLoad = false;}, 1000);
     
     getPrices(priceSaleMin, priceSaleMax, getPricesAndSymbol(100000));
@@ -130,17 +132,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 10000);
 
     if (windowSearch.indexOf('?_escaped_fragment_=') != 0) {
-        if (window.location.hash == '' || window.location.hash === undefined || window.location.hash == null) {
+        if (!window.location.hash) {
             window.location.hash = defaultPano + '&lang=' + getLanguage();
             contextKey = getLanguage();
         } else {
             let panoId = getUrlVars()["p"] ? getUrlVars()["p"].split('-')[0] : 1;
             let categoryId = getUrlVars()["c"];
 
-            if (!categoryId) getPano(panoId);
+            if (!categoryId) getPano(panoId); // ajax.js
             else {
                 categoryId = getUrlVars()["c"].split('-')[0];
-                getPanoByCategoryId(categoryId);
+                getPanoByCategoryId(categoryId); // ajax.js
             }
         }
     } else {
@@ -151,6 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     contextKey = getUrlVars()["lang"];
     if (contextKey == '' || contextKey == 'undefined' || contextKey == null) {
+ // if (!contextKey) -- может так тоже можно?
         $('html').attr('lang', getLanguage());
         $('.' + getLanguage()).hide();
     } else {
@@ -164,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     getTime();
-    $('[data-fancybox]').fancybox({
+    $('[data-fancybox]').fancybox({ // fancybox?
         infobar: false
     });
 
@@ -185,6 +188,55 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+
+
+
+
+
+
+
+
+
+//получение значения параметра ссылки
+function getUrlVars() {
+    let vars = [],
+        hash,
+        hashes = window.location.href.slice(window.location.href.indexOf('#') + 2).split('&');
+    for (let val of hashes) {
+        hash = val.split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
+//Динамическое подключение файлов стилей
+function CSSLoad(file) {
+    var link = document.createElement("link");
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute("type", "text/css");
+    link.setAttribute("href", file);
+    link.setAttribute("title", "dynamicLoadedSheet");
+    document.getElementsByTagName("head")[0].appendChild(link)
+}
+
+//Инициализация битрикс чата
+function BitrixChatInit(lang){
+    var key = (lang == 'en' || lang == 'th' ) ? '2_tlmkb7' 
+                : (lang == 'ru') ? '4_w1ro7v' 
+                : (lang == 'zh') ? '6_e7jx3s' 
+                : '2_tlmkb7';
+	(function(w,d,u){
+      var s=d.createElement('script');s.async=1;s.src=u+'?'+(Date.now()/60000|0);
+      var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);
+  })(window,document,'https://cdn.bitrix24.com/b3820821/crm/site_button/loader_' + key + '.js');
+}
+
+//Автоматическое открытие панели поиска
+function searchTimeout() {
+    setTimeout(() => OnSearchPanelShow(), 5000);
+}
+
 //Получение значений ползунков Цены
 function getPrices(min, max, step) {
     $("#slider-range").slider({
@@ -201,6 +253,7 @@ function getPrices(min, max, step) {
     $("#priceMin").html(priceToString($("#slider-range").slider("values", 0)));
     $("#priceMax").html(priceToString($("#slider-range").slider("values", 1)));
 };
+
 //Получение значений ползунков Кол-ва кроватей
 function getBeds(min, max) {
     $("#slider-beds").slider({
@@ -218,6 +271,75 @@ function getBeds(min, max) {
     $("#bedMax").html($("#slider-beds").slider("values", 1));
 };
 
+//Обновление времени на сайте
+function updateTime() {
+    let dateTime = new Date(timeNow);
+    let locale = $('html').attr('lang');
+    let dateTimeNow = moment(dateTime).add(1, 'minutes');
+
+    $('.time, .mobile-time').text(dateTimeNow.locale('en').format("H:mm"));
+    $('.date, .mobile-date').text(dateTimeNow.locale('en').format("ddd., DD MMM"));
+    timeNow = dateTimeNow.locale('en').format("MMMM D, YYYY HH:mm:ss");
+}
+
+//Получение языка браузера пользователя
+function getLanguage(){
+    let lang = navigator.language,
+        languages = 'en,ru,th,zh';
+    return languages.indexOf(lang) != -1 ? lang.substr(0,2) : 'en';
+}
+
+//Форматирование и вывод серверного времени
+function getTime() {
+    var dateTimeNow = new Date(timeNow);
+    $('.time, .mobile-time').text(moment(dateTimeNow).locale('en').format("H:mm"));
+    $('.date, .mobile-date').text(moment(dateTimeNow).locale('en').format("ddd., DD MMM"));
+}
+
+//Функция при смене ориентации мобильного устройства
+function readDeviceOrientation() {
+    let winH = window.innerHeight || jQuery(window).height() || '100%';
+    let winW = window.innerWidth || jQuery(window).width();
+
+    if ($('#search-panel').hasClass('active')) {
+        let left = 0;
+        if (winW > 396)
+            left = winW - 396;
+        $('#search-panel').css('left', left + 'px');
+    }
+    jQuery('html').css('height', '100%');
+    window.scrollTo(0, 0);
+}
+
+//Получение рондомного числа (Использую в кэшированных ajax запросах)
+function getRandom() {
+    return Math.random();
+}
+
+/* Получение цены и символа согласно выбранной валюте, ф-я написана 
+на замену getPricesByCurrency и getCurrencySymbol.
+В зависимости от кол-ва переданных аргументов будет возвращаться различный результат */
+function getPricesAndSymbol(value) {
+    let currency = $('#currency-select .select-active').attr('data-currency');
+    let [entity, symbol] = currency === 'rub' ? [value * rubKoef, '₽']
+               : currency === 'eur' ? [value * eurKoef, '€']
+               : currency === 'usd' ? [value * usdKoef, '$']
+               : currency === 'thb' ? [value, '฿']
+               : undefined;
+    return value === undefined ? symbol : Math.round(entity);
+}
+
+
+
+
+
+
+
+
+
+
+// --- other funcitons --- (not used in this file (mostly))
+
 //Форматирование числового значения цены в форматированное для вывода на сайте
 function priceToString(price) {
     let priceString = price.toString(),
@@ -232,12 +354,12 @@ function priceToString(price) {
 
 //запись Cookie в браузер
 function setCookie(name, value, options) {
-    var expires = options.expires;
-    var updatedCookie = name + "=" + value;
+    let expires = options.expires;
+    let updatedCookie = name + "=" + value;
     options = options || {};
 
     if (typeof expires == "number" && expires) {
-        var d = new Date();
+        let d = new Date();
         d.setTime(d.getTime() + expires * 1000);
         expires = options.expires = d;
     }
@@ -252,20 +374,16 @@ function setCookie(name, value, options) {
     }
     document.cookie = updatedCookie;
 }
-// function initLiveChat(){
-// 	window.__lc = window.__lc || {};
-// 	window.__lc.license = 8995130;
-// 	(function() {
-// 	  var lc = document.createElement('script'); lc.type = 'text/javascript'; lc.async = true;
-// 	  lc.src = ('https:' == document.location.protocol ? 'https://' : 'https://') + 'cdn.livechatinc.com/tracking.js';
-// 	  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(lc, s);
-// 	})();
-// }
 
-//Получение рондомного числа (Использую в кэшированных ajax запросах)
-function getRandom() {
-    return Math.random();
-}
+/* function initLiveChat(){
+	window.__lc = window.__lc || {};
+	window.__lc.license = 8995130;
+	(function() {
+	  var lc = document.createElement('script'); lc.type = 'text/javascript'; lc.async = true;
+	  lc.src = ('https:' == document.location.protocol ? 'https://' : 'https://') + 'cdn.livechatinc.com/tracking.js';
+	  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(lc, s);
+	})();
+} */
 
 //Системные функции панорамы
 function webglAvailable() {
@@ -276,9 +394,10 @@ function webglAvailable() {
         return false;
     }
 }
-function getWmodeValue() {
+function getWmodeValue() { // not used nor this one, nor the previous one --- не используется
     return webglAvailable() ? 'direct' : 'opaque';
 }
+
 function accessWebVr() {
     unloadPlayer();
     eventUnloadPlugins();
@@ -336,12 +455,8 @@ function isVRModeRequested() {
     return false;
 }
 
-//Автоматическое открытие панели поиска
-function searchTimeout() {
-    setTimeout(() => OnSearchPanelShow(), 5000);
-}
 
-//Вывод информационного сообщения на сайте
+//Вывод информационного сообщения на сайте --- не используется
 function infoMessage(message) {
     $('body').append('<div class="info-message" style="display: none;">' + message + '</div>');
     $('body').queue(function() {
@@ -357,60 +472,6 @@ function infoMessage(message) {
     });
 }
 
-//Поиск категорий/Обектов при клике на категорию(тоже присутствует ненужный код)
-function OnSearch() {
-    let pagetitle = $('#search').val(),
-        category = $('.search-logo').attr('data-category'),
-        categoryId = parseInt($('.search-logo').attr('data-id')),
-        isFolder = $('.search-logo').attr('data-isfolder');
-    
-	isLoaded = true;
-    $('.filters, .filters-body').hide();
-    
-    if (parseInt(isFolder) == 0) isFolder = false;
-    else isFolder = true;
-
-    window.clearTimeout(timer);
-    if (pagetitle.length > 1) {
-        timer = setTimeout(function() {
-            OnAjaxSearch(pagetitle, false, 0, 0);
-        }, 1000);
-    } else {
-        $('.search-content').empty();
-        timer = setTimeout(function() {
-            if ($('#map-search-btn').hasClass('active')) {
-                appendMap(false);
-            } else {
-                if (categoryId == 0) {
-                    GetTopObjects();
-                } else {
-                    OnCategorySearch(category, categoryId, isFolder, '');
-                }
-            }
-        }, 1000);
-    }
-}
-//Переключение языка на сайте(раньше было без перезагрузки страницы, но из-за сторонних сервисов чата приходится перезагружать, хотя нужно в поддержке битрикса узнать, может можно менять язык чата динамически, в предидущем сервисе это было невозможно)
-function OnLanguageChange() {
-    var $this = $(this);
-	var hashNow = window.location.hash;
-    contextKey = $this.data('key');
-    window.location.hash = hashNow.replace(hashNow.substr(-7,7), 'lang=' + contextKey);
-    setTimeout( () => window.location.reload(true), 0);
-}
-
-//получение значения параметра ссылки
-function getUrlVars() {
-    let vars = [],
-        hash,
-        hashes = window.location.href.slice(window.location.href.indexOf('#') + 2).split('&');
-    for (let val of hashes) {
-        hash = val.split('=');
-        vars.push(hash[0]);
-        vars[hash[0]] = hash[1];
-    }
-    return vars;
-}
 //Функция изменения hash ссылки
 $(window).on('hashchange', function() {
     let categoryHashId = getUrlVars()["c"],
@@ -426,89 +487,58 @@ $(window).on('hashchange', function() {
     }
 });
 
-//Получение языка браузера пользователя
-function getLanguage(){
-    let lang = navigator.language,
-        languages = 'en,ru,th,zh';
-    return languages.indexOf(lang) != -1 ? lang.substr(0,2) : 'en';
-}
-
-function OnVrMode() {
+function OnVrMode() { // --- не используется
     accessWebVr();
     OnShowHideControls(true, false);
 }
 
-function OnLoadPano(xmlname, sphere) {
-	let panoWindow = document.getElementById("krpanoSWFObject");
-    panoWindow.call("onout();loadpano(" + xmlname + ", startscene=" + sphere + ", MERGE, ZOOMBLEND(0.5, 8.0));");
-	panoWindow.call("blendmode_prepareblendmode");
-	panoWindow.call('stopallsounds');
-}
 
-//Динамическое подключение файлов стилей
-function CSSLoad(file) {
-    var link = document.createElement("link");
-    link.setAttribute("rel", "stylesheet");
-    link.setAttribute("type", "text/css");
-    link.setAttribute("href", file);
-    link.setAttribute("title", "dynamicLoadedSheet");
-    document.getElementsByTagName("head")[0].appendChild(link)
-}
-//Форматирование и вывод серверного времени
-function getTime() {
-    var dateTimeNow = new Date(timeNow);
-    $('.time, .mobile-time').text(moment(dateTimeNow).locale('en').format("H:mm"));
-    $('.date, .mobile-date').text(moment(dateTimeNow).locale('en').format("ddd., DD MMM"));
-}
 
-/* Получение цены и символа согласно выбранной валюте, ф-я написана 
-на замену getPricesByCurrency и getCurrencySymbol.
-В зависимости от кол-ва переданных аргументов будет возвращаться различный результат */
-function getPricesAndSymbol(value) {
-    let currency = $('#currency-select .select-active').attr('data-currency');
-    let [entity, symbol] = currency === 'rub' ? [value * rubKoef, '₽']
-               : currency === 'eur' ? [value * eurKoef, '€']
-               : currency === 'usd' ? [value * usdKoef, '$']
-               : currency === 'thb' ? [value, '฿']
-               : undefined;
-    return value === undefined ? symbol : Math.round(entity);
-}
 
-//Получение строки id-шников выбранных районов в фильтре
-function getDistrictArray() {
-    let checkedDistricts = [];
-    $('.districts p label input:checked').each(function() {
-        checkedDistricts.push('district==' + $(this).val());
+
+// --- some frontend ---
+
+//Открытие панели поиска(нужно поудалять лишнее, менялось много связанного функционала, накопился мусор)
+function OnSearchPanelShow() {
+    let $this = $(this),
+        placeId = $('#search-panel').attr('data-place-id');
+      
+    OnCloseShareBtns();
+    $('.wrap_mW._show_1e._orinationLeft_3O').hide();
+    OnCloseCategoryShareBtns();
+    clearTimeout(timeout);
+    $('#search-panel').addClass('open');
+    OnShowHideControls(true, true);
+    $('#search-panel').animate({
+        width: (!isMobile.any() ? 396 : '100%')
+    }, 500);
+    $('#search-panel').queue(function() {
+        $('.search-panel-content').fadeIn(500);
+        if (!isMobile.any())
+            $("#search").focus();
+        setTimeout(function(){
+            if (!$.cookie('first_visit')) {
+                $.cookie('first_visit', true, {
+                    expires: 300,
+                    path: '/'
+                });
+            }
+        }, 500);
+        if (isMobile.any()) {
+            let deviceWidthNow = window.innerWidth > 396 ? deviceWidthNow - 396 : window.innerWidth;
+            let left = 0;
+            $('#search-panel').css('left', left + 'px').addClass('active');
+        }
+        $('#search-panel').dequeue();
     });
-    return checkedDistricts.length < 1 ? 0 
-            : checkedDistricts.join(',');
 }
-//Получение кол-ва подгруженных обеъктов в окне поиска
-function getObjectsCount() {
-    let count = 0;
-    $('#site-search-results .sisea-result.offset').each(() => count++);
-    return count;
-}
-//Получение строки id-шников загруженных объектов для исключения их при подгрузке объектов при пролистывании
-function GetExludeObjects(forSearch) {
-    let excludeObjects = [];
-    $('.category-list .sisea-result a').each(function() {
-        let $this = $(this);
-		if(forSearch)
-			excludeObjects.push($this.attr('data-id'));
-		else
-			excludeObjects.push('-' + $this.attr('data-id'));
-    });
-    return excludeObjects.length != 0 ? excludeObjects.join(',') : '0';
-}
-//Инициализация битрикс чата
-function BitrixChatInit(lang){
-    var key = (lang == 'en' || lang == 'th' ) ? '2_tlmkb7' 
-                : (lang == 'ru') ? '4_w1ro7v' 
-                : (lang == 'zh') ? '6_e7jx3s' 
-                : '2_tlmkb7';
-	(function(w,d,u){
-      var s=d.createElement('script');s.async=1;s.src=u+'?'+(Date.now()/60000|0);
-      var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);
-  })(window,document,'https://cdn.bitrix24.com/b3820821/crm/site_button/loader_' + key + '.js');
+
+//Скрытие кнопок шаринга
+function OnCloseShareBtns() {
+    if ($("#share-btn").hasClass('open')) {
+        $("#share-btn").removeClass('open');
+        $("#control-share-btns").animate({
+            height: '0px'
+        }, 500).hide('500');
+    }
 }
