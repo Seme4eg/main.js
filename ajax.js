@@ -648,7 +648,9 @@ function OnLoadObjects(category, offset) {
 
 //Ajax поиск на сайте
 function OnAjaxSearch(title, OnLoaded, count, exclude) {
-    document.querySelector('.parent-category').parentNode.removeChild(document.querySelector('.parent-category'));
+    
+    if (document.querySelector('.parent-category'))
+        document.querySelector('.parent-category').remove();
     
     let searchResults = document.querySelector('.site-search-results .search-content'),
         cultureKey = getUrlVars()["lang"] || 'en',
@@ -694,11 +696,12 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
 
             let container = searchResults.querySelector('.category-list');
 
-            if (OnLoaded) {
+            if (!OnLoaded) {
                 container = document.createElement('div');
                 container.className = 'category-list';
                 searchResults.appendChild(container);
             }
+            console.log('container', container);
 
             for (const item of items) {
 
@@ -721,10 +724,10 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
                                         ${priceToString(item.priceSale)} 
                                         <b>${getPricesAndSymbol()}</b>
                                  </p>`
-                    },
-                    strs: {
-                        firstRepeatable: 
-                            `<a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
+                    }
+                }
+
+                let firstRepeatable = `<a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
                                 title="${item.pagetitle}" 
                                 style="background-image: url(${item.square_img}?${randomHash});" 
                                 class="object" data-id="${item.id}">
@@ -733,15 +736,12 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
                                     : '<div class="new"></div>')}
                                 <div class="object-id">Id: ${item.id}</div> 
                                 <p>${item.pagetitle}</p>`,
-                        secondRepeatable:
-                            `</a>
+                    secondRepeatable = `</a>
                             <div class="object-description">
                                 <p class="card-object-location"><i></i>${item.districtTitle}</p>
                                 <p class="card-object-category"><i></i>${item.categoryTitle}</p>
                                 ${(item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>')}
-                                <p class="card-area">${item.area} <span>sq. m.</span></p>`
-                    }
-                }
+                                <p class="card-area">${item.area} <span>sq. m.</span></p>`;
                 
                 let categorySvgBorder = 
                     `<svg version="1.1" 
@@ -774,8 +774,8 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
 
                     : categoryId == '35-real-estate' ? 
                         `<div class="sisea-result estate offset">
-                            ${obj.strs.firstRepeatable}
-                            ${obj.strs.secondRepeatable}
+                            ${firstRepeatable}
+                            ${secondRepeatable}
 
                                 <p class="object-sea-view">${(item.seaView == 'true' ? 'Sea view' : '')}</p>
                                 ${(item.pool == 0 ? '' : '<p class="card-pool">' + 
@@ -795,9 +795,9 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
                     
                     : (obj[item.typeRealEstate]) ?
                         `<div class="sisea-result estate search offset">
-                            ${obj.strs.firstRepeatable}
+                            ${firstRepeatable}
                                 ${(item.sold == 'true' ? '<div class="sold"></div>' : '')}
-                            ${obj.strs.secondRepeatable}
+                            ${secondRepeatable}
                                 ${item.sold == 'true' ? '<p class="object-price">Sold</p>' 
                                     : (obj[item.typeRealEstate] ? obj[item.typeRealEstate].pPrice : '')}
                             </div>
