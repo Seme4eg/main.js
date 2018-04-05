@@ -214,36 +214,37 @@ function GetTopObjects() {
 
     // end refactoring
     
-    $.ajax({
-        success: function(data) {
-            var items = data.items;
-            searchResults.hide().empty();
-            $('#search').attr('placeholder', translation.Search(cultureKey));
-            $('.back').attr('data-id', 0).attr('data-search-id', 0);
+    // $.ajax({
+    //     success: function(data) {
+    //         var items = data.items;
+    //         searchResults.hide().empty();
+    //         $('#search').attr('placeholder', translation.Search(cultureKey));
+    //         $('.back').attr('data-id', 0).attr('data-search-id', 0);
             
-            var $container = searchResults.append('<div class="category-list"></div>').find('div');
-            for (key in items) {
-                var item = items[key];
-                if (item.type == 1 || item.type == 2 || item.type == 3) {
-                    $container.append('<div class="sisea-result estate search offset">\
-                                        <a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div> <p>' + item.title + '</p>' + (item.sold == 'true' ? '<div class="sold"></div>' : '') + '</a>\
-                                        <div class="object-description">\
-                                        <p class="card-object-location"><i></i>' + item.location + '</p>\
-                                        <p class="card-object-category"><i></i>' + item.category + '</p>' + (item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>') + '<p class="card-area">' + item.area + ' <span>sq. m.</span></p>' + (item.sold == 'true' ? '<p class="object-price">Sold</p>' : (item.type == 1 ? '<p class="object-price">' + priceToString(item.priceRentMonthly) + ' ' + '<i>' + '<b>' + getPricesAndSymbol() + '</b>' + '</i>' + '<text> monthly+</text></p>' : (item.type == 2 ? '<p class="object-price">' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : '')))) + '</div>\
-									</div>');
-                } else {
-                    $container.append('<div class="sisea-result slide offset">\
-												<a ' + (item.objectLink.length < 10 ? 'href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '"' : 'href="' + item.objectLink + '" target="_blank"') + ' title="' + item.title + '" style="background-image: url(' + item.image + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + (item.type == 3 || item.type == 2 || item.type == 1 ? '<p>' + item.titleWithCategory + '</p>' : '<p class="big-title">' + item.titleWithLocation + '</p>') + (item.sold == 'true' ? '<div class="sold"></div>' : '') + '</a>' + (item.video != '0' ? '<button class="youtube-btn" data-code="' + item.video + '"></button>' : '') + '</div>');
-                }
-                $.cookie('object_' + item.itemId, true, {
-                    expires: 300,
-                    path: '/'
-                });
-            }
-            searchResults.fadeIn('500');
-        }
-    });
+    //         var $container = searchResults.append('<div class="category-list"></div>').find('div');
+    //         for (key in items) {
+    //             var item = items[key];
+    //             if (item.type == 1 || item.type == 2 || item.type == 3) {
+    //                 $container.append('<div class="sisea-result estate search offset">\
+    //                                     <a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div> <p>' + item.title + '</p>' + (item.sold == 'true' ? '<div class="sold"></div>' : '') + '</a>\
+    //                                     <div class="object-description">\
+    //                                     <p class="card-object-location"><i></i>' + item.location + '</p>\
+    //                                     <p class="card-object-category"><i></i>' + item.category + '</p>' + (item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>') + '<p class="card-area">' + item.area + ' <span>sq. m.</span></p>' + (item.sold == 'true' ? '<p class="object-price">Sold</p>' : (item.type == 1 ? '<p class="object-price">' + priceToString(item.priceRentMonthly) + ' ' + '<i>' + '<b>' + getPricesAndSymbol() + '</b>' + '</i>' + '<text> monthly+</text></p>' : (item.type == 2 ? '<p class="object-price">' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : '')))) + '</div>\
+	// 								</div>');
+    //             } else {
+    //                 $container.append('<div class="sisea-result slide offset">\
+	// 											<a ' + (item.objectLink.length < 10 ? 'href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '"' : 'href="' + item.objectLink + '" target="_blank"') + ' title="' + item.title + '" style="background-image: url(' + item.image + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + (item.type == 3 || item.type == 2 || item.type == 1 ? '<p>' + item.titleWithCategory + '</p>' : '<p class="big-title">' + item.titleWithLocation + '</p>') + (item.sold == 'true' ? '<div class="sold"></div>' : '') + '</a>' + (item.video != '0' ? '<button class="youtube-btn" data-code="' + item.video + '"></button>' : '') + '</div>');
+    //             }
+    //             $.cookie('object_' + item.itemId, true, {
+    //                 expires: 300,
+    //                 path: '/'
+    //             });
+    //         }
+    //         searchResults.fadeIn('500');
+    //     }
+    // });
 }
+
 //Ajax загрузка объектов по фильтру(раздел недвижимости)
 function OnFilterSearch() {
     $('.filters-body, .hide-filters, .search-panel-header').hide();

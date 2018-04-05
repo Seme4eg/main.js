@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- document onclicks or other handlers ---
     
-    document.querySelector(".feed-back-form form").onsubmit = feedBackForm;
+    $(document).on('click', '.feed-back-form form', feedBackForm);
     $(document).on('click', '.day-night-btn', dayNightBtn);
     $(document).on('click', '#fullScreen-btn', fullScreen);
     $(document).on('click', '#hotspots-btn', hotspotsHideShow);
@@ -272,11 +272,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }, false);
 
         helpModal.addEventListener('touchmove', function(event) {
-            let otk = {};
-
             nowPoint = event.changedTouches[0];
-            otk.x = nowPoint.pageX - startPoint.x;
-            otk.y = nowPoint.pageY - startPoint.y;
+            
+            let otk = {
+                x: nowPoint.pageX - startPoint.x,
+                y: nowPoint.pageY - startPoint.y
+            };
+            
             let left = otk.x;
 
             if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
@@ -446,8 +448,8 @@ document.addEventListener('DOMContentLoaded', function() {
             nowPoint = event.changedTouches[0];
 
             let otk = {
-                x = nowPoint.pageX - startPoint.x,
-                y = nowPoint.pageY - startPoint.y
+                x: nowPoint.pageX - startPoint.x,
+                y: nowPoint.pageY - startPoint.y
             };
 
             let left = otk.x;

@@ -342,12 +342,10 @@ function getPricesAndSymbol(value) {
 
 //Форматирование числового значения цены в форматированное для вывода на сайте
 function priceToString(price) {
-    let priceString = price.toString(),
-        price = priceString.replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 '),
-        priceStart = price.split(' ')[0],
-        priceEnd = price.replace(priceStart, '');
-
-    if (priceEnd === undefined) priceEnd = '';
+    let priceString = price.toString()
+                        .replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ');
+    let priceStart = priceString.split(' ')[0];
+    let priceEnd = priceString.replace(priceStart, '') || '';
 
     return '<span>' + priceStart + '</span>' + priceEnd;;
 }
