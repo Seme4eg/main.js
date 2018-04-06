@@ -655,10 +655,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
     let searchResults = document.querySelector('.site-search-results .search-content'),
         cultureKey = getUrlVars()["lang"] || 'en',
         categoryId = getElAttr('.search-logo', 'data-category'),
-        isFolder = parseInt(getElAttr('.search-logo', 'data-isfolder')),
         currency = getElAttr('#currency-select .select-active', 'data-currency');
-
-    let url = `https://thai360.info/api/ajax-search?lang=${cultureKey}`;
 
     let data = {
         title: title,
@@ -668,17 +665,13 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
         currency: currency,
         rand: getRandom()
     }
-    
-    url += Object.entries(data).reduce((acc, val) => {
-        return acc += `&${val[0]}=${val[1]}` 
-    }, '');
 
-    
-    // check this for working..
+    let url = `https://thai360.info/api/ajax-search?lang=${cultureKey}${getUrlString(data)}`;
+
     searchResults.innerHTML = OnLoaded ? searchResults.innerHTML + smallPreloader
-                                : smallPreloader;
+                                : preloader;
 
-
+    // fetching data
     fetch(url)
         .then(response => response.json())
         .then(items => {
@@ -701,7 +694,6 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
                 container.className = 'category-list';
                 searchResults.appendChild(container);
             }
-            console.log('container', container);
 
             for (const item of items) {
 
@@ -817,7 +809,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
                         </div>`;
             }
 
-            isLoaded = data.length >= 10 ? true : false;
+            isLoaded = items.length >= 10 ? true : false;
 
             // searchResults.fadeIn('500');
             searchResults.style.display = '';
@@ -828,58 +820,59 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
 //Ajax загрузка панораммы на сайт
 function getPano(itemId) {
     panoIsLoad = false;
-	clearTimeout(videoTimeOut);
-    $('#day-night-btn div').remove().hide();
-    $('#video-object-btn div, #about-object-btn div').remove();
-    $('.sample-info').remove();
-    var panoContainer = $('#tourDIV');
-    var videoContainer = $('.video-modal-content');
-    var panoLocation = $('#panoLocation');
-	var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    $.ajax({
-        url: 'https://thai360.info/api/get-object',
-        data: {
-            cultureKey: cultureKey,
-            itemId: itemId,
-            lang: cultureKey,
-			rand: getRandom()
-        },
-        beforeSend: function() {},
-        success: function(data) {
-            panoUrl = data.panoUrl + 'indexdata/index_messages_en.xml';
+    
+    clearTimeout(videoTimeOut);
+    
+    // $('#day-night-btn div').remove().hide();
+    document.querySelector('#day-night-btn div, #video-object-btn div, #about-object-btn div, .sample-info').forEach(node => 
+        node.remove());
+    document.querySelector('#day-night-btn div').style.display = 'none';
+    
+    let [panoContainer, videoContainer, panoLocation] = 
+        document.querySelectorAll('#tourDIV, .video-modal-content, #panoLocation');
+    
+    let cultureKey = getUrlVars()["lang"] || 'en';
+    let data = {
+        cultureKey: cultureKey,
+        itemId: itemId,
+        rand: getRandom()
+    }
+
+    let url = `https://thai360.info/api/get-object?lang=${cultureKey}${getUrlString(data)}`;
+
+    // fetching data
+    fetch(url)
+        .then(response => response.json)
+        .then(data => {
             panoVrXml = data.panoUrl + 'indexdata/index_vr.xml';
-			      panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
-            panoSwf = data.panoUrl + 'indexdata/index.swf';
-            crossPanoUrl = data.panoUrl;
-            mapTitle = data.longtitle;
-            var objectId = data.id;
-            var player = $('.audio-player .play-list');
-            var published = data.published;
-            var isRealEstate = data.isRealEstate;
-            var audioLink = data.audioLink;
-            var audioFiles = data.audioFiles.split(',');
-            var sphereId = getUrlVars()["s"];
-			var mainPanoLink = parseInt(data.mainPanoLink) == 0 ? data.mainPanoLink : data.mainPanoLink + '&lang=' + cultureKey;
-			var placeId = data.placeId;
-			$('#search-panel').attr('data-place-id', placeId);
-            if (audioLink == musicLink) {} else {
+            panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
+
+        })
+    
+    $.ajax({
+        success: function(data) {
+
+            var player = $('.audio-player .play-list'),
+                audioLink = data.audioLink,
+                mainPanoLink = parseInt(data.mainPanoLink) == 0 ? data.mainPanoLink : data.mainPanoLink + '&lang=' + cultureKey;
+                
+			$('#search-panel').attr('data-place-id', data.placeId);
+            if (audioLink != musicLink){
                 musicLink = audioLink;
-                player.empty();
-                audioFiles.forEach(function(item) {
-                    player.append('<li data-link="' + item + '"></li>');
+                player.innerHTML = '';
+                data.audioFiles.split(',').forEach(item => {
+                    player.innerHTML += `<li data-link="${item}"></li>`;
                 });
-                $('#stop-play').addClass('first-click');
-                if ($('#stop-play').hasClass('active')) {
-                    $('#stop-play').click();
-                    setTimeout(function() {
-                        $('#stop-play').click();
-                    }, 2000);
+
+                let stopPlay = document.getElementById('stop-play');
+                stopPlay.className += ' first-click';
+                if (stopPlay.classList.contains('active')) {
+                    // check for working
+                    stopPlay.click();
+                    setTimeout(() => stopPlay.click(), 2000);
                 }
             }
-            if (published == 0) {
+            if (data.published == 0) {
                 window.location.hash = '#!p=26-phuket&s=pano12&lang=' + cultureKey;
             } else {
                 if (firstLoad || $.cookie('video_' + data.id) || parseInt(data.video) == 0) {
@@ -926,7 +919,7 @@ function getPano(itemId) {
 						accessStdVr();
 					}
 					else{
-						OnLoadPano(panoXml, sphereId);
+						OnLoadPano(panoXml, getUrlVars()["s"]);
 						//$('body').css('-webkit-filter', 'grayscale(0%)');
 					}
                 }
@@ -944,7 +937,7 @@ function getPano(itemId) {
                     $('title').text(data.seoTitle);
                     $("meta[name='title']").attr('content', data.seoTitle);
                     $("meta[property='og:title']").attr('content', data.seoTitle);
-                    panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + data.location + '<br>' + data.longtitle + (data.isRealEstate == true ? ' ID: ' + objectId : '') + '</span>');
+                    panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + data.location + '<br>' + data.longtitle + (data.isRealEstate == true ? ' ID: ' + data.id : '') + '</span>');
                 }
                 if (data.isSample) {
                     $('#tourDIV').append('<div class="sample-info">' + translation.Sample_Tour(cultureKey) + '</div>');
@@ -968,6 +961,7 @@ function getPano(itemId) {
 		fbq('track','ViewContent',{value:3.50, currency:'USD', content_name: $('title').text()});
     });
 }
+
 //Ajax загрузка случайной панорамы по id категории
 function getPanoByCategoryId(itemId) {
 	clearTimeout(videoTimeOut);
@@ -1545,4 +1539,10 @@ function GetExludeObjects(forSearch) {
 // --- my functions ---
 function getElAttr(el, attr) {
     return document.querySelector(el).getAttribute(attr);
+}
+
+function getUrlString(data) {
+    return Object.entries(data).reduce((acc, val) => {
+                return acc += `&${val[0]}=${val[1]}` 
+            }, '');
 }
