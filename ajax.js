@@ -819,6 +819,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
 
 //Ajax загрузка панораммы на сайт
 function getPano(itemId) {
+    console.log('load function run');
     panoIsLoad = false;
     
     clearTimeout(videoTimeOut);
@@ -844,19 +845,16 @@ function getPano(itemId) {
     fetch(url)
         .then(response => response.json)
         .then(data => {
+            console.log('fetching data');
             panoVrXml = data.panoUrl + 'indexdata/index_vr.xml';
             panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
 
-        })
-    
-    $.ajax({
-        success: function(data) {
-
-            var player = $('.audio-player .play-list'),
+            var player = document.querySelector('.audio-player .play-list'),
                 audioLink = data.audioLink,
                 mainPanoLink = parseInt(data.mainPanoLink) == 0 ? data.mainPanoLink : data.mainPanoLink + '&lang=' + cultureKey;
                 
-			$('#search-panel').attr('data-place-id', data.placeId);
+            document.getElementById('search-panel').setAttribute('data-place-id', data.placeId);
+            
             if (audioLink != musicLink){
                 musicLink = audioLink;
                 player.innerHTML = '';
@@ -872,28 +870,29 @@ function getPano(itemId) {
                     setTimeout(() => stopPlay.click(), 2000);
                 }
             }
-            if (data.published == 0) {
+            if (data.published == 0)
                 window.location.hash = '#!p=26-phuket&s=pano12&lang=' + cultureKey;
-            } else {
-                if (firstLoad || $.cookie('video_' + data.id) || parseInt(data.video) == 0) {
-
-                }
+            else {
+                if (firstLoad || $.cookie('video_' + data.id) || parseInt(data.video) == 0) {}
 				else{
-					videoTimeOut = setTimeout(function() {
-                        $('#video-object-btn').append('<div class="animation-border"></div>\
-										<div class="animation-background"></div>\
-										<div class="btn-animation"></div>');
+					videoTimeOut = setTimeout(() => {
+                        document.getElementById('video-object-btn').innerHTML +=
+                            `<div class="animation-border"></div>
+                            <div class="animation-background"></div>
+                            <div class="btn-animation"></div>`;
                     }, 10000);
 				}
                 if ((!firstLoad) && (!$.cookie('object_info'))) {
-                    $('#about-object-btn').append('<div class="animation-border"></div>\
-													<div class="animation-background"></div>\
-													<div class="btn-animation"></div>');
+                    document.getElementById('about-object-btn').innerHTML +=
+                        `<div class="animation-border"></div>
+                        <div class="animation-background"></div>
+                        <div class="btn-animation"></div>`
                 }
                 if (!$.cookie('day_night_' + itemId)) {
-                    $('#day-night-btn').append('<div class="animation-border"></div>\
-													<div class="animation-background"></div>\
-													<div class="btn-animation"></div>');
+                    document.getElementById('day-night-btn').innerHTML +=
+                        `<div class="animation-border"></div>
+                        <div class="animation-background"></div>
+                        <div class="btn-animation"></div>`;
                 }
                 if (!$.cookie('object_' + itemId)) {
                     $.cookie('object_' + itemId, true, {
@@ -901,65 +900,79 @@ function getPano(itemId) {
                         path: '/'
                     });
                 }
-                $('.search-logo, .logo').attr('href', data.parentPoint + '&lang=' + cultureKey);
-                $("meta[name='description']").attr('content', data.description);
-                $("meta[name='keywords']").attr('content', data.keywords);
-                $("meta[property='og:description']").attr('content', data.description);
-                $("meta[property='og:image']").attr('content', data.image);
-                $("link[rel='image_src']").attr('href', data.image);
-                $("link[rel='alternate']").attr('hreflang', cultureKey).attr('href', window.location.href);
-                $("meta[property='og:image:secure_url']").attr('content', data.image);
-                $("meta[name='twitter:image']").attr('content', data.image);
-                $("meta[property='og:url']").attr('content', window.location.href);
-                $('#home-btn').attr('data-link', mainPanoLink);
-                if (isVRModeRequested()) {
-                    accessWebVr();
-                } else {
-					if(firstLoad){
-						accessStdVr();
-					}
-					else{
-						OnLoadPano(panoXml, getUrlVars()["s"]);
-						//$('body').css('-webkit-filter', 'grayscale(0%)');
-					}
-                }
-                if ((data.video != null || data.video != '' || data.video != undefined) && data.video) {
-                    $('#video-object-btn').attr('data-code', data.video);
-                } else {
-                    $('#video-object-btn').attr('data-code', 0);
-                }
-                if (data.template == 3) {
-                    $('title').text(data.longtitle + ' - ' + siteName);
-                    $("meta[name='title']").attr('content', data.longtitle + ' - ' + siteName);
-                    $("meta[property='og:title']").attr('content', data.longtitle + ' - ' + siteName);
-                    panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + data.title + '</span>');
-                } else {
-                    $('title').text(data.seoTitle);
-                    $("meta[name='title']").attr('content', data.seoTitle);
-                    $("meta[property='og:title']").attr('content', data.seoTitle);
-                    panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + data.location + '<br>' + data.longtitle + (data.isRealEstate == true ? ' ID: ' + data.id : '') + '</span>');
-                }
-                if (data.isSample) {
-                    $('#tourDIV').append('<div class="sample-info">' + translation.Sample_Tour(cultureKey) + '</div>');
-                }
+                document.querySelectorAll('.search-logo, .logo').forEach(node => {
+                    node.setAttribute('href', `${data.parentPoint}&lang=${cultureKey}`);
+                })
+                // check this for quselectoring
+                document.querySelectorAll("meta[name='description'], meta[property='og:description']").forEach(node => 
+                    node.setAttribute('content', data.description));
+                document.querySelector("meta[name='keywords']").setAttribute('content', data.keywords);
+                document.querySelectorAll("meta[property='og:image'], meta[property='og:image:secure_url'], meta[name='twitter:image']")
+                    .forEach(node => 
+                        node.setAttribute('content', data.image));
+                document.querySelector("link[rel='image_src']").setAttribute('href', data.image);
+                document.querySelector("link[rel='alternate']").setAttribute('hreflang', cultureKey);
+                document.querySelector("link[rel='alternate']").setAttribute('href', window.location.href);
+                document.querySelector("meta[property='og:url']").setAttribute('content', window.location.href);
+                document.getElementById('home-btn').setAttribute('data-link', mainPanoLink);
+
+                isVRModeRequested() ? accessWebVr() 
+                    : firstLoad ? accessStdVr() 
+                        : OnLoadPano(panoXml, getUrlVars()["s"]);
+                
+                // port this in future..
+                let videoObjBtn = document.getElementById('video-object-btn');
+                
+                // if ((data.video != null || data.video != '' || data.video != undefined) && data.video)
+                data.video ? videoObjBtn.setAttribute('data-code', data.video) : 
+                    videoObjBtn.setAttribute('data-code', 0);
+
+
+                let or = data.template == 3;
+
+                let str = or ? `${data.longtitle}-${siteName}` : data.seoTitle;
+                
+                document.title = str; // true?
+                
+                document.querySelectorAll("meta[name='title'], meta[property='og:title']").forEach(node =>
+                    node.setAttribute('content', str));
+
+                panoLocation.innerHTML = or ?
+                     `${translation.Thailand(cultureKey)}<br><span>${data.title}</span>` :
+                     `${translation.Thailand(cultureKey)}<br><span>${data.location}<br>
+                        ${data.longtitle + (data.isRealEstate == true ? ' ID: ' + data.id : '')}</span>`;
+
+                if (data.isSample)
+                    document.getElementById('tourDIV').innerHTML += 
+                        '<div class="sample-info">' + translation.Sample_Tour(cultureKey) + '</div>'
             }
-        }
-    }).done(function() {
-        panoIsLoad = true;
-		if(!firstLoad){
-			ga('create', 'UA-90941148-2', 'auto', 'myAnalytics');
-			ga('myAnalytics.send', 'pageview', location.pathname + location.search + location.hash);
-			ga('myAnalytics.remove');
-			if(parseInt(itemId) == 26 && isMobile.AndroidApp()){
-				setTimeout(function(){var krpano = document.getElementById("krpanoSWFObject");krpano.set('hotspot[spotpoint1590].visible', false);krpano.set('hotspot[spotpoint1593].visible', false);krpano.set('hotspot[spotpoint1594].visible', false);}, 500);
-			}
-		}
-		else{
-			firstLoad = false;
-		}
-		fbq('track', 'PageView');
-		fbq('track','ViewContent',{value:3.50, currency:'USD', content_name: $('title').text()});
-    });
+
+        })
+        .then(() => {
+            console.log('then again')
+            panoIsLoad = true;
+            
+            // firstLoad - NOT DEFINED
+            if(!firstLoad){
+                // ga - NOT DEFINED
+                ga('create', 'UA-90941148-2', 'auto', 'myAnalytics');
+                ga('myAnalytics.send', 'pageview', location.pathname + location.search + location.hash);
+                ga('myAnalytics.remove');
+
+                if(parseInt(itemId) == 26 && isMobile.AndroidApp()){
+                    setTimeout(() => {
+                        var krpano = document.getElementById("krpanoSWFObject");
+                        krpano.set('hotspot[spotpoint1590].visible', false);
+                        krpano.set('hotspot[spotpoint1593].visible', false);
+                        krpano.set('hotspot[spotpoint1594].visible', false);
+                    }, 500);
+                }
+            } else firstLoad = false;
+            
+            // NOT DEFINED
+            fbq('track', 'PageView');
+            fbq('track','ViewContent',{value:3.50, currency:'USD', content_name: $('title').text()});
+        })
 }
 
 //Ajax загрузка случайной панорамы по id категории
