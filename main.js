@@ -20,22 +20,17 @@ var owl,
     offset = 0;
     userAgent = window.navigator.userAgent;
 
-var preloader = '<svg version="1.1" id="loader" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"\
-                        width="40px" height="40px" viewBox="0 0 40 40" enable-background="new 0 0 40 40" xml:space="preserve">\
-                        <path opacity="0.5" fill="#fff" d="M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946\
-                        s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634\
-                        c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z"/>\
-                        <path fill="#000" d="M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0\
-                        C22.32,8.481,24.301,9.057,26.013,10.047z">\
-                        <animateTransform attributeType="xml"\
-                            attributeName="transform"\
-                            type="rotate"\
-                            from="0 20 20"\
-                            to="360 20 20"\
-                            dur="0.5s"\
-                            repeatCount="indefinite"/>\
-                        </path>\
-                        </svg>';
+var preloader = `<svg version="1.1" id="loader" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    width="40px" height="40px" viewBox="0 0 40 40" enable-background="new 0 0 40 40" xml:space="preserve">
+                    <path opacity="0.5" fill="#fff" d="M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946
+                        s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634
+                        c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z"/>
+                    <path fill="#000" d="M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0
+                        C22.32,8.481,24.301,9.057,26.013,10.047z">
+                        <animateTransform attributeType="xml" attributeName="transform" type="rotate" 
+                            from="0 20 20" to="360 20 20" dur="0.5s" repeatCount="indefinite"/>
+                    </path>
+                </svg>`;
 var smallPreloader = '<svg class="object-loads" id="smallLoader" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" style="background: none;"><g transform="translate(20 50)">\
                         <circle cx="0" cy="0" r="6" fill="#ffffff" transform="scale(0.572192 0.572192)">\
                             <animateTransform attributeName="transform" type="scale" begin="-0.375s" calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s" repeatCount="indefinite"></animateTransform>\
@@ -152,8 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     contextKey = getUrlVars()["lang"];
-    if (contextKey == '' || contextKey == 'undefined' || contextKey == null) {
- // if (!contextKey) -- может так тоже можно?
+    if (!contextKey){
         $('html').attr('lang', getLanguage());
         $('.' + getLanguage()).hide();
     } else {
@@ -284,9 +278,9 @@ function updateTime() {
 
 //Получение языка браузера пользователя
 function getLanguage(){
-    let lang = navigator.language,
+    let lang = navigator.language.substr(0,2),
         languages = 'en,ru,th,zh';
-    return languages.indexOf(lang) != -1 ? lang.substr(0,2) : 'en';
+    return languages.indexOf(lang) != -1 ? lang : 'en';
 }
 
 //Форматирование и вывод серверного времени
@@ -538,5 +532,22 @@ function OnCloseShareBtns() {
         $("#control-share-btns").animate({
             height: '0px'
         }, 500).hide('500');
+    }
+}
+
+//Показать/Скрыть элементы управления панорамы(используется при открытии/закрытии окон на сайте)
+function OnShowHideControls(isHide, isSearch) {
+    if (isHide) {
+        if (isMobile.any() || !isSearch) {
+            $('#day-night-btn').css('z-index', '-1');
+            $('#about-object-btn, #panoLocation, .site-bar-btns, .sample-info').fadeOut(500);
+        }
+        $('.search-tabs, .logo').fadeOut(500);
+    } else {
+        if (isMobile.any() || !isSearch) {
+            $('#about-object-btn, #panoLocation, .site-bar-btns, .sample-info').fadeIn(500);
+            $('#day-night-btn').css('z-index', '10000000000');
+        }
+        $('.search-tabs, .logo').fadeIn(500);
     }
 }

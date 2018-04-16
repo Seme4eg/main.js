@@ -1,100 +1,184 @@
+// --- document onclicks or other handlers ---
+
+$(document).on('click', '.feed-back-form form', feedBackForm);
+$(document).on('click', '.day-night-btn', dayNightBtn);
+$(document).on('click', '#terms-of-use, #privacy-policy, .item-new', getInnerContent); // fetching..
+$(document).on('click', '#currency-select li a', currencySelection);
+$(document).on('click', '#type-select li a', typeSelection);
+$(document).on('click', '.filter-search-btn', OnFilterSearch); // fetching..
+$(document).on('click', '.districts p label input', districtsHandler);
+$(document).on('click', '#video-object-btn, .youtube-btn', videoObjectBtn);
+$(document).on('click', '.lang-links li a', OnLanguageChange);
+$(document).on('click', '.category-list a', categoryList);
+$(document).on('click', '.search-logo', () => OnCloseSearchPanel(true));
+$(document).on('click', '#settings-btn', settingsBtn);
+$(document).on('click', '#share-btn', shareBtn);
+$(document).on('click', '#category-share-btn', categoryShareBtn);
+$(document).on('click', '.owl-navigation .owl-item', slideChange);
+$(document).on('click', '#control-share-btns a', OnCloseShareBtns);
+$(document).on('click', '.back', backHandler);
+$(document).on('click', '#search-btn', OnSearch);
+$(document).on('click', '.search-panel-close-btn', () => OnCloseSearchPanel(true));
+$(document).on('click', '.language-active', languageActive);
+$(document).on('click', '#stop-play', stopPlay);
+document.getElementById('audio-player').onended = audioPlayer;
+
+
+$(document).on('click', '#sale-input', function(event) {
+    event.stopPropagation();
+    $('.radio-btns .select-list').hide();
+    $('.priceFilter h4').text(translation.Price_Rate(getUrlVars()["lang"]));
+    getPrices(getPricesAndSymbol(priceSaleMin), getPricesAndSymbol(priceSaleMax), getPricesAndSymbol(100000));
+    GetFilterMap();
+});
+$(document).on('click', '#daily-rent', function(event) {
+    event.stopPropagation();
+    $('.radio-btns .select-list').hide();
+    $('.priceFilter h4').text(translation.Daily_Rate(getUrlVars()["lang"]));
+    getPrices(getPricesAndSymbol(priceRentDailyMin), getPricesAndSymbol(priceRentDailyMax), getPricesAndSymbol(100));
+    GetFilterMap();
+});
+$(document).on('click', '#monthly-rent', function(event) {
+    event.stopPropagation();
+    $('.radio-btns .select-list').hide();
+    $('.priceFilter h4').text(translation.Monthly_Rate(getUrlVars()["lang"]));
+    getPrices(getPricesAndSymbol(priceRentMonthlyMin), getPricesAndSymbol(priceRentMonthlyMax), getPricesAndSymbol(500));
+    GetFilterMap();
+});
+$(document).on('click', '#currency-select .select-active', function() {
+    if ($('#currency-select ul').hasClass('open'))
+        $('#currency-select ul').hide().removeClass('open');
+    else
+        $('#currency-select ul').show().addClass('open');
+});
+$(document).on('click', '#type-select .select-active', function() {
+    if ($('#type-select ul').hasClass('open')) {
+        $('#type-select ul').hide().removeClass('open');
+    } else {
+        $('#type-select ul').show().addClass('open');
+    }
+});
+$(document).on('click', '#property-feed-back', function(){
+if(!$(this).hasClass('sent'))
+  sendMail(true);
+})
+$(document).on('click', '.contact-object-btn', function() {
+    if (isMobile.any())
+        OnCloseSearchPanel(false);
+    parent.LC_API.open_chat_window({
+        source: 'minimized'
+    });
+});
+$(document).on('click', '.roomsFilter label', function(e) {
+    e.preventDefault();
+    let $this = $(this); // is needed?
+    $('.roomsFilter input').each(function() {
+        if (parseInt($this.find('input').val()) >= parseInt($(this).val())) {
+            $(this).parent('label').addClass('active');
+        } else
+            $(this).parent('label').removeClass('active');
+    });
+    $('.roomsFilter input:checked').prop('checked', false);
+    $this.find('input').prop('checked', true);
+});
+$(document).on('click', '.help-content-close-btn', OnCloseHelpModal);
+$(document).on('click', '.filters-body, .filters-body div, .filters-body span, .filters-body p, .filters-body label, .filters-body input', () => {
+    $('.select-list').hide().removeClass('open');
+});
+$(document).on('click', '.filter-clear-btn', filterCleanBtn);
+$(document).on('click', '.radio-btns p label', function() {
+    let $this = $(this);
+    $('.radio-btns p label').removeClass('active');
+    $this.addClass('active');
+});
+$(document).on('click', '#rent-input', function() {
+    $('.radio-btns .select-list').show();
+});
+$(document).on('click', '.cookie-close-btn', () => {
+    $('.cookies').slideUp();
+});
+$(document).on('click', '.ok-btn', function() {
+    $.cookie('using_cookies', true, {
+        expires: 300,
+        path: '/'
+    });
+    $('.cookies').slideUp();
+});
+$(document).on('click', '#about-full-btn', function() {
+    OnCloseSearchPanel(false);
+    getAboutInfo(false);
+});
+$(document).on('click', '.estate-back-btn', function() {
+    $('.show-filters, .sisea-search-form, .search-panel-footer, .site-search-results').show();
+    $('.filters-body, .hide-filters').hide().removeClass('active');
+});
+$(document).on('click', '#about-btn', function() {
+    OnCloseSearchPanel(false);
+    document.querySelectorAll('[data-b24-crm-button-widget=openline_livechat]')[0].click();
+});
+$(document).on('click', '.feed-back-btn', function() {
+    // parent.LC_API.open_chat_window({
+        // source: 'minimized'
+    // });
+ga('send', 'event', 'Button', 'Click', 'List Property Click');
+$('.feed-back-form').fadeIn(500);
+OnCloseSearchPanel(false);
+    OnShowHideControls(true, false);
+});
+$(document).on('click', '#help-btn', function() {
+    OnCloseSearchPanel(false);
+    getHelpInfo($(this).attr('data-id'));
+});
+$(document).on('click', '.greeting-box-close-btn', function() {
+    $('.greeting-box').fadeOut(500);
+});
+$(document).on('keyup', '.sisea-search-form input', function(e){
+let btnCode = e.keyCode;
+    if (btnCode != 16 && btnCode != 17 && btnCode != 18)
+        OnSearch();
+});
+$(document).on('click', '#category-search-btn', function() {
+$('.category-search-btn div').remove();
+    OnSearchPanelShow();
+});
+$(document).on('click', '.map-modal-close-btn, .map-modal-mobile-close-btn', function(){
+$('#map-modal').fadeOut(500);
+$('#modalMap').empty();
+});
+$(document).on('click', '#map-search-btn', function() {
+let placeId = $('#search-panel').attr('data-place-id');
+    $('#map-modal').fadeIn(500);
+    setTimeout( () => placeId ? initMapMarker(placeId, 'modalMap') : initMap('modalMap'), 500);
+});
+$(document).on('click', '.feed-back-close-btn', function() {
+    $('.feed-back-form').fadeOut(500);
+    OnShowHideControls(false, false);
+    setTimeout( () => OnSearchPanelShow(), 600);
+});
+$(document).on('click', '.inner-modal a', function() {
+    OnCloseInnerModal();
+    OnCloseModal();
+});
+$(document).on('click', '.about-object-modal a[href*=\\#]', function() {
+    OnCloseAboutObjectModal();
+})
+$(document).on('click', '.prev-new', function() {
+    var offset = parseInt($(this).attr('data-offset'));
+    var nextOffset = parseInt($('.next-new').attr('data-offset'));
+    if (offset >= 0) {
+        OnLoadNews(offset);
+        if (offset >= 0) {
+            $(this).attr('data-offset', offset - 3);
+            $('.next-new').attr('data-offset', nextOffset - 3);
+        }
+    }
+});
+$(document).on('click', '.next-new', nextNew);
+
+
 //Функция загрузки страницы(отсюда нужно вынести все обработчики кликов по кнопкам и наверно собрать их в отдельный файл)
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- document onclicks or other handlers ---
-    
-    $(document).on('click', '.feed-back-form form', feedBackForm);
-    $(document).on('click', '.day-night-btn', dayNightBtn);
-    $(document).on('click', '#fullScreen-btn', fullScreen);
-    $(document).on('click', '#hotspots-btn', hotspotsHideShow);
-    $(document).on('click', '#giroscope-btn', giroscopeOnOff);
-    $(document).on('click', '#terms-of-use, #privacy-policy, .item-new', getInnerContent);
-    $(document).on('click', '#currency-select li a', currencySelection);
-    $(document).on('click', '#type-select li a', typeSelection);
-    $(document).on('click', '.show-filters', OnShowFilters);
-    $(document).on('click', '.filter-search-btn', OnFilterSearch);
-    $(document).on('click', '.districts p label input', districtsHandler);
-    $(document).on('click', '#video-object-btn, .youtube-btn', videoObjectBtn);
-    $(document).on('click', '.video-modal-close-btn', OnCloseVideoModal);
-    $(document).on('click', '.help-content-close-btn', OnCloseVideoModal);
-    $(document).on('click', '.inner-content-close-btn', OnCloseInnerModal);
-    $(document).on('click', '.about-object-close-btn', OnCloseAboutObjectModal);
-    $(document).on('click', '.help-content-close-btn', OnCloseHelpModal);
-    $(document).on('click', '.lang-links li a', OnLanguageChange);
-    $(document).on('click', '.close-modal-btn', OnCloseModal);
-    $(document).on('click', '.category-list a', categoryList);
-    $(document).on('click', '.search-logo', () => OnCloseSearchPanel(true));
-    $(document).on('click', '#settings-btn', settingsBtn);
-    $(document).on('click', '#share-btn', shareBtn);
-    $(document).on('click', '#category-share-btn', categoryShareBtn);
-    $(document).on('click', '.owl-navigation .owl-item', slideChange);
-    $(document).on('click', '#category-control-share-btns a', OnCloseCategoryShareBtns);
-    $(document).on('click', '#control-share-btns a', OnCloseShareBtns);
-    $(document).on('click', '.back', backHandler);
-    $(document).on('click', '#search-btn', OnSearch);
-    $(document).on('click', '.search-panel-close-btn', () => OnCloseSearchPanel(true));
-    $(document).on('click', '.language-active', languageActive);
-    $(document).on('click', '#stop-play', stopPlay);
-    document.getElementById('audio-player').onended = audioPlayer;
-
-
-    $(document).on('click', '#sale-input', function(event) {
-        event.stopPropagation();
-        $('.radio-btns .select-list').hide();
-        $('.priceFilter h4').text(translation.Price_Rate(getUrlVars()["lang"]));
-        getPrices(getPricesAndSymbol(priceSaleMin), getPricesAndSymbol(priceSaleMax), getPricesAndSymbol(100000));
-        GetFilterMap();
-    });
-    $(document).on('click', '#daily-rent', function(event) {
-        event.stopPropagation();
-        $('.radio-btns .select-list').hide();
-        $('.priceFilter h4').text(translation.Daily_Rate(getUrlVars()["lang"]));
-        getPrices(getPricesAndSymbol(priceRentDailyMin), getPricesAndSymbol(priceRentDailyMax), getPricesAndSymbol(100));
-        GetFilterMap();
-    });
-    $(document).on('click', '#monthly-rent', function(event) {
-        event.stopPropagation();
-        $('.radio-btns .select-list').hide();
-        $('.priceFilter h4').text(translation.Monthly_Rate(getUrlVars()["lang"]));
-        getPrices(getPricesAndSymbol(priceRentMonthlyMin), getPricesAndSymbol(priceRentMonthlyMax), getPricesAndSymbol(500));
-        GetFilterMap();
-    });
-    $(document).on('click', '#currency-select .select-active', function() {
-        if ($('#currency-select ul').hasClass('open'))
-            $('#currency-select ul').hide().removeClass('open');
-        else
-            $('#currency-select ul').show().addClass('open');
-    });
-    $(document).on('click', '#type-select .select-active', function() {
-        if ($('#type-select ul').hasClass('open')) {
-            $('#type-select ul').hide().removeClass('open');
-        } else {
-            $('#type-select ul').show().addClass('open');
-        }
-    });
-	$(document).on('click', '#property-feed-back', function(){
-		if(!$(this).hasClass('sent'))
-			sendMail(true);
-	})
-    $(document).on('click', '.contact-object-btn', function() {
-        if (isMobile.any())
-            OnCloseSearchPanel(false);
-        parent.LC_API.open_chat_window({
-            source: 'minimized'
-        });
-    });
-    $(document).on('click', '.roomsFilter label', function(e) {
-        e.preventDefault();
-        let $this = $(this); // is needed?
-        $('.roomsFilter input').each(function() {
-            if (parseInt($this.find('input').val()) >= parseInt($(this).val())) {
-                $(this).parent('label').addClass('active');
-            } else
-                $(this).parent('label').removeClass('active');
-        });
-        $('.roomsFilter input:checked').prop('checked', false);
-        $this.find('input').prop('checked', true);
-    });
     $(".roomsFilter label").mouseover(roomsFilterMouseOver).mouseout(function() {
         let $this = $(this);
         $('.roomsFilter label').removeClass('room-hover').removeClass('room-no-hover');
@@ -103,101 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else
             $('.roomsFilter h5 i').text($('.roomsFilter input:checked').val());
     });
-    $(document).on('click', '.filters-body, .filters-body div, .filters-body span, .filters-body p, .filters-body label, .filters-body input', () => {
-        $('.select-list').hide().removeClass('open');
-    });
-    $(document).on('click', '.filter-clear-btn', filterCleanBtn);
-    $(document).on('click', '.radio-btns p label', function() {
-        let $this = $(this);
-        $('.radio-btns p label').removeClass('active');
-        $this.addClass('active');
-    });
-    $(document).on('click', '#rent-input', function() {
-        $('.radio-btns .select-list').show();
-    });
-    $(document).on('click', '.cookie-close-btn', () => {
-        $('.cookies').slideUp();
-    });
-    $(document).on('click', '.ok-btn', function() {
-        $.cookie('using_cookies', true, {
-            expires: 300,
-            path: '/'
-        });
-        $('.cookies').slideUp();
-    });
-    $(document).on('click', '#about-full-btn', function() {
-        OnCloseSearchPanel(false);
-        getAboutInfo(false);
-    });
-    $(document).on('click', '.estate-back-btn', function() {
-        $('.show-filters, .sisea-search-form, .search-panel-footer, .site-search-results').show();
-        $('.filters-body, .hide-filters').hide().removeClass('active');
-    });
-    $(document).on('click', '#about-btn', function() {
-        OnCloseSearchPanel(false);
-        document.querySelectorAll('[data-b24-crm-button-widget=openline_livechat]')[0].click();
-    });
-    $(document).on('click', '.feed-back-btn', function() {
-        // parent.LC_API.open_chat_window({
-            // source: 'minimized'
-        // });
-		ga('send', 'event', 'Button', 'Click', 'List Property Click');
-		$('.feed-back-form').fadeIn(500);
-		OnCloseSearchPanel(false);
-        OnShowHideControls(true, false);
-    });
-    $(document).on('click', '#help-btn', function() {
-        OnCloseSearchPanel(false);
-        getHelpInfo($(this).attr('data-id'));
-    });
-    $(document).on('click', '.greeting-box-close-btn', function() {
-        $('.greeting-box').fadeOut(500);
-    });
-    $(document).on('keyup', '.sisea-search-form input', function(e){
-		let btnCode = e.keyCode;
-        if (btnCode != 16 && btnCode != 17 && btnCode != 18)
-            OnSearch();
-	});
-    $(document).on('click', '#category-search-btn', function() {
-		$('.category-search-btn div').remove();
-        OnSearchPanelShow();
-    });
-	$(document).on('click', '.map-modal-close-btn, .map-modal-mobile-close-btn', function(){
-		$('#map-modal').fadeOut(500);
-		$('#modalMap').empty();
-	});
-    $(document).on('click', '#map-search-btn', function() {
-		let placeId = $('#search-panel').attr('data-place-id');
-        $('#map-modal').fadeIn(500);
-        setTimeout( () => placeId ? initMapMarker(placeId, 'modalMap') : initMap('modalMap'), 500);
-    });
-    $(document).on('click', '.feed-back-close-btn', function() {
-        $('.feed-back-form').fadeOut(500);
-        OnShowHideControls(false, false);
-        setTimeout( () => OnSearchPanelShow(), 600);
-    });
-    $(document).on('click', '.inner-modal a', function() {
-        OnCloseInnerModal();
-        OnCloseModal();
-    });
-    $(document).on('click', '.about-object-modal a[href*=#]', function() {
-        OnCloseAboutObjectModal();
-    })
-    $(document).on('click', '.prev-new', function() {
-        var offset = parseInt($(this).attr('data-offset'));
-        var nextOffset = parseInt($('.next-new').attr('data-offset'));
-        if (offset >= 0) {
-            OnLoadNews(offset);
-            if (offset >= 0) {
-                $(this).attr('data-offset', offset - 3);
-                $('.next-new').attr('data-offset', nextOffset - 3);
-            }
-        }
-    });
-    $(document).on('click', '.next-new', nextNew);
-
-
-    
     $('.scrollbar-inner').scrollbar();
     $('#about-body').scrollbar();
     $('#inner-body').scrollbar();
@@ -206,8 +195,8 @@ document.addEventListener('DOMContentLoaded', function() {
     $('#main-categories').scrollbar();
     $('#location-filter').scrollbar();
     $('#feed-back-content').scrollbar();
-    
-    
+
+
     if (isMobile.any()) {
 
         // vars
@@ -249,9 +238,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			let deviceWidth = isMobile.AndroidApp() || isMobile.iOSApp() ? screen.width : window.innerWidth;
 			$('#modalMap').css({'height': deviceHeight, 'width': deviceWidth});
         }, false);
-        
+
         $('#giroscope-btn').parents('li').show();
-            
+
         //Функции слайда окон на мобильных девайсах
         panel.addEventListener('touchstart', function(event) {
             if (!$('#filters-body').hasClass('active'))
@@ -273,12 +262,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         helpModal.addEventListener('touchmove', function(event) {
             nowPoint = event.changedTouches[0];
-            
+
             let otk = {
                 x: nowPoint.pageX - startPoint.x,
                 y: nowPoint.pageY - startPoint.y
             };
-            
+
             let left = otk.x;
 
             if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
@@ -288,283 +277,275 @@ document.addEventListener('DOMContentLoaded', function() {
         }, {
             passive: true
         });
-
-
-
-        // --- functions - handlers ---
-        function panelTouchMove (event) {
-            if (!$('#filters-body').hasClass('active')) {
-                nowPoint = event.changedTouches[0];
-
-                let otk = {
-                    x: nowPoint.pageX - startPoint.x,
-                    y: nowPoint.pageY - startPoint.y
-                };
-                
-                let left = window.innerWidth > 396 ? window.innerWidth - (396 - otk.y) : otk.x;
-
-                if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5))
-                    panel.style.left = left + 'px';
-            }
-        }
-        
-        function panelTouchEnd (event) {
-            if (!$('#filters-body').hasClass('active')) {
-                nowPoint = event.changedTouches[0];
-
-                let pdelay = new Date(),
-                    xAbs = Math.abs(startPoint.x - nowPoint.pageX),
-                    yAbs = Math.abs(startPoint.y - nowPoint.pageY),
-                    left = window.innerWidth > 396 ? window.innerWidth - 396 : 0;
-
-                if ((xAbs > 20 || yAbs > 20)) {
-                    if (xAbs > (yAbs * 5)) {
-                        if (xAbs > 130) {
-                            if (nowPoint.pageX > startPoint.x) {
-                                $('#search-panel').animate({
-                                    left: window.innerWidth
-                                }, 500);
-                                $('#search-panel').queue(function() {
-                                    OnCloseSearchPanel(false);
-                                    $('#search-panel').dequeue();
-                                });
-                            }
-                        } else {
-                            $('#search-panel').animate({
-                                left: left
-                            }, 500);
-                        }
-                    } else {
-                        $('#search-panel').animate({
-                            left: left
-                        }, 500);
-                    }
-                }
-            }
-        }
-        
-        function categoryBtnTouchMove(event) {
-            if (event.targetTouches.length == 1) {
-                let touch = event.targetTouches[0];
-                let moveX = touch.pageX - touchOffsetX;
-                categoryBtn.style.right = (window.innerWidth - 38 - moveX) + 'px';
-                panel.style.width = (window.innerWidth - 53 - moveX) + 'px';
-            }
-        }
-        
-        function categoryBtnTouchEnd(event) {
-            if (event.changedTouches.length == 1) {
-                let widthNow = parseInt(panel.style.width);
-                if (widthNow >= 130) {
-                    categoryBtn.style.right = 15 + 'px';
-                    OnSearchPanelShow();
-                } else {
-                    $('#category-search-btn').animate({
-                        right: 15
-                    }, 500);
-                    $('#search-panel').animate({
-                        width: 0
-                    }, 500);
-                }
-            }
-        }
-
-        function aboutObjectBtnHandler(event){
-			event.preventDefault();
-            if (event.changedTouches.length == 1) {
-                let widthNow = parseInt(aboutObjectModal.style.right);
-                if ((window.innerWidth - widthNow) >= 130) {
-                    aboutObjectBtn.style.left = 15 + 'px';
-                    getAboutObjectInfo(false);
-                    clearTimeout(timeout);
-                } else {
-                    $('#about-object-btn').animate({
-                        left: 15
-                    }, 500);
-                    $('#about-object-modal').animate({
-                        right: '100%'
-                    }, 500);
-                }
-            }
-        }
-
-        function videoModalTouchMove(event) {
-            nowPoint = event.changedTouches[0];
-
-            let otk = {
-                x: nowPoint.pageX - startPoint.x,
-                y: nowPoint.pageY - startPoint.y
-            };
-
-            let left = otk.x;
-
-            if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
-                videoModal.style.right = (left * (-1)) + 'px';
-                videoModal.style.left = left + 'px';
-            }
-        }
-
-        function videoModalTouchEnd(event) {
-            nowPoint = event.changedTouches[0];
-
-            let pdelay = new Date(),
-                xAbs = Math.abs(startPoint.x - nowPoint.pageX),
-                yAbs = Math.abs(startPoint.y - nowPoint.pageY),
-                right = '100%';
-
-            if ((xAbs > 20 || yAbs > 20)) {
-                if (xAbs > (yAbs * 5)) {
-                    if (xAbs > 130) {
-                        if (nowPoint.pageX > startPoint.x) {
-                            $('#video-modal-window').animate({
-                                right: (window.innerWidth * (-1)),
-                                left: window.innerWidth
-                            }, 500);
-                            $('#video-modal-window').queue(function() {
-                                OnCloseVideoModal();
-                                $('#video-modal-window').css({
-                                    right: '0',
-                                    left: '100%'
-                                });
-                                $('#video-modal-window').dequeue();
-                            });
-                        }
-                    } else {
-                        $('#video-modal-window').animate({
-                            left: 0,
-                            right: 0
-                        }, 500);
-                    }
-                } else {
-                    $('#video-modal-window').animate({
-                        left: 0,
-                        right: 0
-                    }, 500);
-                }
-            }
-        }
-
-        function aboutUsTouchMove(event) {
-            nowPoint = event.changedTouches[0];
-
-            let otk = {
-                x: nowPoint.pageX - startPoint.x,
-                y: nowPoint.pageY - startPoint.y
-            };
-
-            let left = otk.x;
-
-            if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
-                aboutUsModal.style.right = (left * (-1)) + 'px';
-                aboutUsModal.style.left = left + 'px';
-            }
-        }
-
-        function aboutUsTouchEnd(event) {
-            nowPoint = event.changedTouches[0];
-
-            let pdelay = new Date(),
-                xAbs = Math.abs(startPoint.x - nowPoint.pageX),
-                yAbs = Math.abs(startPoint.y - nowPoint.pageY),
-                right = '100%';
-
-            if ((xAbs > 20 || yAbs > 20)) {
-                if (xAbs > (yAbs * 5)) {
-                    if (xAbs > 130) {
-                        if (nowPoint.pageX > startPoint.x) {
-                            $('#about-modal-window').animate({
-                                right: (window.innerWidth * (-1)),
-                                left: window.innerWidth
-                            }, 500);
-                            $('#about-modal-window').queue(function() {
-                                OnCloseModal();
-                                $('#about-modal-window').css({
-                                    right: '0',
-                                    left: '100%'
-                                });
-                                $('#about-modal-window').dequeue();
-                            });
-                        }
-                    } else {
-                        $('#about-modal-window').animate({
-                            left: 0,
-                            right: 0
-                        }, 500);
-                    }
-                } else {
-                    $('#about-modal-window').animate({
-                        left: 0,
-                        right: 0
-                    }, 500);
-                }
-            }
-        }
-
-        function btnTouchStart(event) {
-            if (event.targetTouches.length == 1) {
-                let touch = event.targetTouches[0];
-                touchOffsetX = touch.pageX - touch.target.offsetLeft;
-            }
-        }
-
-        function createNewDate(event) {
-            startPoint.x = event.changedTouches[0].pageX;
-            startPoint.y = event.changedTouches[0].pageY;
-            ldelay = new Date();
-        }
-
-        function helpTouchEnd(event) {
-            var pdelay = new Date();
-            nowPoint = event.changedTouches[0];
-            var xAbs = Math.abs(startPoint.x - nowPoint.pageX);
-            var yAbs = Math.abs(startPoint.y - nowPoint.pageY);
-            var right = '100%';
-            
-            if ((xAbs > 20 || yAbs > 20)) {
-                if (xAbs > (yAbs * 5)) {
-                    if (xAbs > 130) {
-                        if (nowPoint.pageX > startPoint.x) {
-                            $('#help-modal').animate({
-                                right: (window.innerWidth * (-1)),
-                                left: window.innerWidth
-                            }, 500);
-                            $('#help-modal').queue(function() {
-                                OnCloseHelpModal();
-                                $('#help-modal').css({
-                                    right: '0',
-                                    left: '100%'
-                                });
-                                $('#help-modal').dequeue();
-                            });
-                        }
-                    } else {
-                        $('#help-modal').animate({
-                            left: 0,
-                            right: 0
-                        }, 500);
-                    }
-                } else {
-                    $('#help-modal').animate({
-                        left: 0,
-                        right: 0
-                    }, 500);
-                }
-            }
-        }
-
-        //Закрытие окна помощи
-        function OnCloseHelpModal() {
-            $('.help-content').empty();
-            $('.help-content-close-btn, .help-content').hide();
-            $('.help-modal').animate({
-                left: '100%'
-            }, 500);
-            OnShowHideControls(false, false);
-        }
-        
     }
 });
 
+// --- functions - handlers ---
+function panelTouchMove (event) {
+    if (!$('#filters-body').hasClass('active')) {
+        nowPoint = event.changedTouches[0];
+
+        let otk = {
+            x: nowPoint.pageX - startPoint.x,
+            y: nowPoint.pageY - startPoint.y
+        };
+
+        let left = window.innerWidth > 396 ? window.innerWidth - (396 - otk.y) : otk.x;
+
+        if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5))
+            panel.style.left = left + 'px';
+    }
+}
+
+function panelTouchEnd (event) {
+    if (!$('#filters-body').hasClass('active')) {
+        nowPoint = event.changedTouches[0];
+
+        let pdelay = new Date(),
+            xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+            yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+            left = window.innerWidth > 396 ? window.innerWidth - 396 : 0;
+
+        if ((xAbs > 20 || yAbs > 20)) {
+            if (xAbs > (yAbs * 5)) {
+                if (xAbs > 130) {
+                    if (nowPoint.pageX > startPoint.x) {
+                        $('#search-panel').animate({
+                            left: window.innerWidth
+                        }, 500);
+                        $('#search-panel').queue(function() {
+                            OnCloseSearchPanel(false);
+                            $('#search-panel').dequeue();
+                        });
+                    }
+                } else {
+                    $('#search-panel').animate({
+                        left: left
+                    }, 500);
+                }
+            } else {
+                $('#search-panel').animate({
+                    left: left
+                }, 500);
+            }
+        }
+    }
+}
+
+function categoryBtnTouchMove(event) {
+    if (event.targetTouches.length == 1) {
+        let touch = event.targetTouches[0];
+        let moveX = touch.pageX - touchOffsetX;
+        categoryBtn.style.right = (window.innerWidth - 38 - moveX) + 'px';
+        panel.style.width = (window.innerWidth - 53 - moveX) + 'px';
+    }
+}
+
+function categoryBtnTouchEnd(event) {
+    if (event.changedTouches.length == 1) {
+        let widthNow = parseInt(panel.style.width);
+        if (widthNow >= 130) {
+            categoryBtn.style.right = 15 + 'px';
+            OnSearchPanelShow();
+        } else {
+            $('#category-search-btn').animate({
+                right: 15
+            }, 500);
+            $('#search-panel').animate({
+                width: 0
+            }, 500);
+        }
+    }
+}
+
+function aboutObjectBtnHandler(event){
+event.preventDefault();
+    if (event.changedTouches.length == 1) {
+        let widthNow = parseInt(aboutObjectModal.style.right);
+        if ((window.innerWidth - widthNow) >= 130) {
+            aboutObjectBtn.style.left = 15 + 'px';
+            getAboutObjectInfo(false);
+            clearTimeout(timeout);
+        } else {
+            $('#about-object-btn').animate({
+                left: 15
+            }, 500);
+            $('#about-object-modal').animate({
+                right: '100%'
+            }, 500);
+        }
+    }
+}
+
+function videoModalTouchMove(event) {
+    nowPoint = event.changedTouches[0];
+
+    let otk = {
+        x: nowPoint.pageX - startPoint.x,
+        y: nowPoint.pageY - startPoint.y
+    };
+
+    let left = otk.x;
+
+    if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
+        videoModal.style.right = (left * (-1)) + 'px';
+        videoModal.style.left = left + 'px';
+    }
+}
+
+function videoModalTouchEnd(event) {
+    nowPoint = event.changedTouches[0];
+
+    let pdelay = new Date(),
+        xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+        yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+        right = '100%';
+
+    if ((xAbs > 20 || yAbs > 20)) {
+        if (xAbs > (yAbs * 5)) {
+            if (xAbs > 130) {
+                if (nowPoint.pageX > startPoint.x) {
+                    $('#video-modal-window').animate({
+                        right: (window.innerWidth * (-1)),
+                        left: window.innerWidth
+                    }, 500);
+                    $('#video-modal-window').queue(function() {
+                        OnCloseVideoModal();
+                        $('#video-modal-window').css({
+                            right: '0',
+                            left: '100%'
+                        });
+                        $('#video-modal-window').dequeue();
+                    });
+                }
+            } else {
+                $('#video-modal-window').animate({
+                    left: 0,
+                    right: 0
+                }, 500);
+            }
+        } else {
+            $('#video-modal-window').animate({
+                left: 0,
+                right: 0
+            }, 500);
+        }
+    }
+}
+
+function aboutUsTouchMove(event) {
+    nowPoint = event.changedTouches[0];
+
+    let otk = {
+        x: nowPoint.pageX - startPoint.x,
+        y: nowPoint.pageY - startPoint.y
+    };
+
+    let left = otk.x;
+
+    if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
+        aboutUsModal.style.right = (left * (-1)) + 'px';
+        aboutUsModal.style.left = left + 'px';
+    }
+}
+
+function aboutUsTouchEnd(event) {
+    nowPoint = event.changedTouches[0];
+
+    let pdelay = new Date(),
+        xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+        yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+        right = '100%';
+
+    if ((xAbs > 20 || yAbs > 20)) {
+        if (xAbs > (yAbs * 5)) {
+            if (xAbs > 130) {
+                if (nowPoint.pageX > startPoint.x) {
+                    $('#about-modal-window').animate({
+                        right: (window.innerWidth * (-1)),
+                        left: window.innerWidth
+                    }, 500);
+                    $('#about-modal-window').queue(function() {
+                        OnCloseModal();
+                        $('#about-modal-window').css({
+                            right: '0',
+                            left: '100%'
+                        });
+                        $('#about-modal-window').dequeue();
+                    });
+                }
+            } else {
+                $('#about-modal-window').animate({
+                    left: 0,
+                    right: 0
+                }, 500);
+            }
+        } else {
+            $('#about-modal-window').animate({
+                left: 0,
+                right: 0
+            }, 500);
+        }
+    }
+}
+function btnTouchStart(event) {
+    if (event.targetTouches.length == 1) {
+        let touch = event.targetTouches[0];
+        touchOffsetX = touch.pageX - touch.target.offsetLeft;
+    }
+}
+function createNewDate(event) {
+    startPoint.x = event.changedTouches[0].pageX;
+    startPoint.y = event.changedTouches[0].pageY;
+    ldelay = new Date();
+}
+function helpTouchEnd(event) {
+    var pdelay = new Date();
+    nowPoint = event.changedTouches[0];
+    var xAbs = Math.abs(startPoint.x - nowPoint.pageX);
+    var yAbs = Math.abs(startPoint.y - nowPoint.pageY);
+    var right = '100%';
+
+    if ((xAbs > 20 || yAbs > 20)) {
+        if (xAbs > (yAbs * 5)) {
+            if (xAbs > 130) {
+                if (nowPoint.pageX > startPoint.x) {
+                    $('#help-modal').animate({
+                        right: (window.innerWidth * (-1)),
+                        left: window.innerWidth
+                    }, 500);
+                    $('#help-modal').queue(function() {
+                        OnCloseHelpModal();
+                        $('#help-modal').css({
+                            right: '0',
+                            left: '100%'
+                        });
+                        $('#help-modal').dequeue();
+                    });
+                }
+            } else {
+                $('#help-modal').animate({
+                    left: 0,
+                    right: 0
+                }, 500);
+            }
+        } else {
+            $('#help-modal').animate({
+                left: 0,
+                right: 0
+            }, 500);
+        }
+    }
+}
+//Закрытие окна помощи
+function OnCloseHelpModal() {
+    $('.help-content').empty();
+    $('.help-content-close-btn, .help-content').hide();
+    $('.help-modal').animate({
+        left: '100%'
+    }, 500);
+    OnShowHideControls(false, false);
+}
 function feedBackForm() {
     var elem = $(".feed-back-form form input, .feed-back-form form select"),
         foc,
@@ -864,7 +845,7 @@ function nextNew() {
     let offset = parseInt($(this).attr('data-offset')),
         prevOffset = parseInt($('.prev-new').attr('data-offset')),
         count = parseInt($('.about-block.block-2 h3').attr('data-count'));
-    
+
     if (offset < count) {
         OnLoadNews(offset);
         $(this).attr('data-offset', offset + 3);
@@ -910,9 +891,9 @@ function OnSearch() {
         category = $('.search-logo').attr('data-category'),
         categoryId = parseInt($('.search-logo').attr('data-id')),
         isFolder = $('.search-logo').attr('data-isfolder');
-    
+
     $('.filters, .filters-body').hide();
-    
+
     if (parseInt(isFolder) == 0) isFolder = false;
     else isFolder = true;
 

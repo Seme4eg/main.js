@@ -92,22 +92,28 @@ function GetFilterMap() {
         }
     });
 }
-//Ajax загрузка топ объектов
-function GetTopObjects() {
-    if (!isMobile.any()) {
-        $('.search-panel-header').show();
-        $('.search-panel-body').css('top', '150px');
-    }
-    $('.search-logo').attr('data-id', 0).attr('data-isfolder', 1).attr('data-category', 0);
-    $('.parent-category').remove();
-    $('.absolute, .filters, .filters-body').hide();
-    $('.filters-body').removeClass('active');
-    let searchResults = document.querySelector('.site-search-results .search-content');
-    console.log(searchResults);
-    var cultureKey = getUrlVars()['lang'] || 'en';
-    
 
-    // --- refactored ---
+// загрузка топ объектов
+function GetTopObjects() {
+
+    if (!isMobile.any()) {
+        document.querySelector('.search-panel-header').style.display = '';
+        document.querySelector('.search-panel-body').style.top = '150px';
+    }
+
+    setAttributes(
+        document.querySelector('.search-logo'),
+        { 'data-id': 0, 'data-isfolder': 1, 'data-category': 0 }
+    )
+    
+    // document.querySelector('.parent-category').remove(); -- element does not exist
+    document.querySelectorAll('.absolute, .filters, .filters-body').forEach(node =>
+        node.style.display = 'none');
+    // test this
+    document.querySelector('.filters-body').classList.remove('active');
+    
+    let searchResults = document.querySelector('.site-search-results .search-content'),
+        cultureKey = getUrlVars()['lang'] || 'en';
     
     let url = `https://thai360.info/api/get-top-objects?lang=${cultureKey}&rand=${getRandom()}`;
 
@@ -210,11 +216,10 @@ function GetTopObjects() {
                 searchResults.style.display = ''; // сдесь была fadeIn(500), можно прописать анимацию на JS
             }
         })
-        .catch (function (error) {
+        .catch (error => {
             console.log('Request failed', error);
         });
 
-    // end refactoring
 }
 
 //Ajax загрузка объектов по фильтру(раздел недвижимости)
@@ -294,7 +299,6 @@ function OnFilterSearch() {
             } else {
                 for (key in items) {
                     var item = items[key];
-                    console.log(item.priceSale);
                     if ((parseInt(item.priceSale) >= priceNowMin) && (parseInt(item.priceSale) <= priceNowMax) && (count <= 10) && (districts == 0 || districts.indexOf(item.district) >= 0)) {
                         $container.append('<div class="sisea-result estate offset">\
 															<a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div><p>' + item.title + '</p></a>\
@@ -819,15 +823,15 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
 
 //Ajax загрузка панораммы на сайт
 function getPano(itemId) {
-    console.log('load function run');
     panoIsLoad = false;
     
     clearTimeout(videoTimeOut);
     
     // $('#day-night-btn div').remove().hide();
-    document.querySelector('#day-night-btn div, #video-object-btn div, #about-object-btn div, .sample-info').forEach(node => 
+    document.querySelectorAll('#day-night-btn div, #video-object-btn div, #about-object-btn div, .sample-info').forEach(node => 
         node.remove());
-    document.querySelector('#day-night-btn div').style.display = 'none';
+    // node doesn't exist:
+    // document.querySelector('#day-night-btn div').style.display = 'none';
     
     let [panoContainer, videoContainer, panoLocation] = 
         document.querySelectorAll('#tourDIV, .video-modal-content, #panoLocation');
@@ -843,9 +847,8 @@ function getPano(itemId) {
 
     // fetching data
     fetch(url)
-        .then(response => response.json)
+        .then(response => response.json())
         .then(data => {
-            console.log('fetching data');
             panoVrXml = data.panoUrl + 'indexdata/index_vr.xml';
             panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
 
@@ -949,10 +952,8 @@ function getPano(itemId) {
 
         })
         .then(() => {
-            console.log('then again')
             panoIsLoad = true;
             
-            // firstLoad - NOT DEFINED
             if(!firstLoad){
                 // ga - NOT DEFINED
                 ga('create', 'UA-90941148-2', 'auto', 'myAnalytics');
@@ -1558,4 +1559,11 @@ function getUrlString(data) {
     return Object.entries(data).reduce((acc, val) => {
                 return acc += `&${val[0]}=${val[1]}` 
             }, '');
+}
+
+// setting multiple attributes at once
+function setAttributes(el, attrs) {
+    for(var key in attrs) {
+        el.setAttribute(key, attrs[key]);
+    }
 }
