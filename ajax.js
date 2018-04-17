@@ -1,96 +1,129 @@
-//Ajax загрузка родительских категорий
+// загрузка родительских категорий
 function GetParentCategories() {
-    $('.search-logo').attr('data-categoryid', 0).attr('data-isfolder', 1);
-    $('.parent-category').remove();
-    $('.filters, .filters-body').hide();
-    $('.filters-body').removeClass('active');
-    var searchResults = $('#main-categories .category-list');
-    var cultureKey = getUrlVars()["lang"] || 'en';
 
-    $.ajax({
-        url: 'https://thai360.info/api/get-parent-categories',
-        data: {
-            lang: cultureKey,
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            searchResults.html(preloader);
-        },
-        success: function(data) {
-            var items = data.items;
-            searchResults.hide().empty();
-            searchResults.append('<li><a href="https://hub360.info"><span style="background-image: url(/assets/images/logo360.svg);"></span><p>HUB360</p></a></li>');
-            for (key in items) {
-                var item = items[key];
-                searchResults.append('<li class="' + item.catClass + '">\
-										<a data-id="' + item.itemId + '" data-search-id="' + item.searchId + '" title="' + item.title + '">\
-										<svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"\
-											  viewBox="0 0 60 60" style="enable-background:new 0 0 60 60; fill:' + item.borderColor + ';" xml:space="preserve">\
-											<polyline class="st0" points="30,30 5.8,30 5.8,5.7 54.2,5.7 54.2,54.3 5.8,54.3 "/>\
-											<g>\
-											 <path class="st1" d="M30,59.8C13.5,59.8,0.2,46.5,0.2,30S13.5,0.3,30,0.3S59.8,13.6,59.8,30S46.4,59.8,30,59.8z M30,2.3\
-											  C14.6,2.3,2.2,14.7,2.2,30c0,15.3,12.5,27.8,27.8,27.8S57.8,45.4,57.8,30C57.8,14.7,45.3,2.3,30,2.3z"/>\
-											</g>\
-											<g>\
-											 <path class="st1" d="M30,58.8H1.2V30c0,0-0.4,11.7,8.3,20.3S30,58.8,30,58.8z"/>\
-											 <path class="st1" d="M30,59.8H0.2V30.6c0-0.3,0-0.5,0-0.6l2,0v0.4c0,1.9,0.6,11.8,8,19.2c8.3,8.2,19.6,8.3,19.8,8.3V59.8z\
-											   M2.2,57.8h17.6c-3.5-1.3-7.5-3.4-11-6.8c-3.3-3.3-5.4-6.9-6.6-10.3V57.8z"/>\
-											</g>\
-										</svg>\
-											<span>\
-												<i style="background-image: url(' + item.icon + ');"></i>\
-											</span>\
-											<p>' + item.title + '</p>\
-										</a>\
-									</li>');
+    setAttributes(document.querySelector('.search-logo'), { 'data-categoryid': 0, 'data-isfolder': 1 });
+    
+    if (document.querySelector('.parent-category'))
+        document.querySelector('.parent-category').remove();
+    document.querySelectorAll('.filters, .filters-body').forEach(node => 
+        node.style.display = 'none');
+    document.querySelector('.filters-body').classList.remove('active');
+
+    let searchResults = document.querySelector('#main-categories .category-list'),
+        cultureKey = getUrlVars()["lang"] || 'en',
+        url = `https://thai360.info/api/get-parent-categories?lang=${cultureKey}&rand=${getRandom()}`;
+
+    searchResults.innerHTML = preloader;
+
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let items = data.items;
+
+            searchResults.innerHTML = 
+                `<li><a href="https://hub360.info">
+                    <span style="background-image: url(/assets/images/logo360.svg);"></span>
+                    <p>HUB360</p>
+                </a></li>`
+            
+            for (const item of items) {
+                searchResults.innerHTML += 
+                    `<li class="${item.catClass}">
+                        <a data-id="${item.itemId}" data-search-id="${item.searchId}" title="${item.title}">
+                            <svg version="1.1" id="Layer_2" 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                viewBox="0 0 60 60" style="enable-background:new 0 0 60 60; fill:${item.borderColor};" 
+                                xml:space="preserve">
+                                    <polyline class="st0" points="30,30 5.8,30 5.8,5.7 54.2,5.7 54.2,54.3 5.8,54.3 "/>
+                                    <g>
+                                        <path class="st1" d="M30,59.8C13.5,59.8,0.2,46.5,0.2,30S13.5,0.3,30,0.3S59.8,13.6,59.8,30S46.4,59.8,30,59.8z M30,2.3
+                                            C14.6,2.3,2.2,14.7,2.2,30c0,15.3,12.5,27.8,27.8,27.8S57.8,45.4,57.8,30C57.8,14.7,45.3,2.3,30,2.3z"/>
+                                    </g>
+                                    <g>
+                                        <path class="st1" d="M30,58.8H1.2V30c0,0-0.4,11.7,8.3,20.3S30,58.8,30,58.8z"/>
+                                        <path class="st1" d="M30,59.8H0.2V30.6c0-0.3,0-0.5,0-0.6l2,0v0.4c0,1.9,0.6,11.8,8,19.2c8.3,8.2,19.6,8.3,19.8,8.3V59.8z
+                                            M2.2,57.8h17.6c-3.5-1.3-7.5-3.4-11-6.8c-3.3-3.3-5.4-6.9-6.6-10.3V57.8z"/>
+                                    </g>
+                            </svg>
+                            <span>
+                                <i style="background-image: url(${item.icon});"></i>
+                            </span>
+                            <p>${item.title}</p>
+                        </a>
+                    </li>`
             }
-            searchResults.fadeIn('500');
-        }
-    });
+
+        })
+        .catch (error => {
+            console.log('Request failed', error);
+        });
 }
 
-//Ajax получение фильтра городов на карте(в разделе недвижимости)
+
+// получение фильтра городов на карте(в разделе недвижимости)
 function GetFilterMap() {
-    var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    var rentType = parseInt($('.radio-btns .select-list input:checked').val());
-    var type = parseInt($('.radio-btns input[name="type"]:checked').val());
-    var districtsContainer = $('.districts');
-    var points = $('.district-points');
-    var map = $('.map');
-    var categoryId = $('#type-select .select-active').attr('data-categoryid')
-    var locationFilter = $('.location-filter');
-    $.ajax({
-        url: 'https://thai360.info/api/get-filter-map',
-        data: {
-            lang: cultureKey,
-            type: type,
-            rentType: rentType,
-            categoryId: categoryId,
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            map.append(preloader);
-        },
-        success: function(data) {
-            districtsContainer.empty();
-            points.empty();
-            var districts = data.districts;
-            var districtPoints = data.disrictPoints;
-            for (key in districts) {
-                var district = districts[key];
-                districtsContainer.prepend('<p id="' + district.alias + '-district"><label><input name="' + district.alias + '" type="checkbox" value="' + district.value + '"><span>' + district.count + '</span>' + district.title + '</label></p>');
+    let cultureKey = getUrlVars()["lang"] || 'en';
+    
+    let rentType = document.querySelector('.radio-btns .select-list input:checked') ?
+        parseInt(document.querySelector('.radio-btns .select-list input:checked').value)
+        : NaN;
+        
+    let type = parseInt(document.querySelector('.radio-btns input[name="type"]:checked').value);
+
+    let districtsContainer = document.querySelector('.districts'),
+        points = document.querySelector('.district-points'),
+        map = document.querySelector('.map'),
+        categoryId = document.querySelector('#type-select .select-active').getAttribute('data-categoryid'),
+        locationFilter = document.querySelector('.location-filter');
+    console.log(map);
+
+    map.innerHTML += preloader;
+    
+    let data = {
+        type: type,
+        rentType: rentType,
+        categoryId: categoryId,
+        rand: getRandom()
+    };
+
+    let url = `https://thai360.info/api/get-filter-map?lang=${cultureKey}${getUrlString(data)}`;
+
+    // getting data
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            districtsContainer.innerHTML = '';
+            points.innerHTML = '';
+
+            for (const district of data.districts) {
+                console.log('cycle one');
+                districtsContainer.innerHTML = 
+                    `<p id="${district.alias}-district">
+                        <label>
+                            <input name="${district.alias}" type="checkbox" value="${district.value}">
+                            <span>${district.count}</span>${district.title}
+                        </label>
+                    </p>` + districtsContainer.innerHTML;
             }
-            for (key in districtPoints) {
-                var point = districtPoints[key];
-                points.append('<li id="' + point.alias + '-point" data-district="' + point.alias + '-district" style="display: none;"><a></a></li>');
+
+            for (const point of data.districtPoints) {
+                console.log('cycle two');
+                points.innerHTML = 
+                    `<li id="${point.alias}-point" data-district="${point.alias}-district" style="display: none;"><a></a></li>` +
+                        points.innerHTML;
             }
-            map.find('svg').remove();
-            map.fadeIn('500');
-        }
-    });
+            console.log(map.querySelector('svg'))
+            map.querySelector('svg').remove(); // check it
+            // map.fadeIn('500'); // needed??
+            map.style.display = '';
+            
+        })
+        .catch (error => {
+            console.log('Request failed', error);
+        });  
 }
 
 // загрузка топ объектов
