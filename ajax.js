@@ -72,19 +72,16 @@ function GetFilterMap() {
         
     let type = parseInt(document.querySelector('.radio-btns input[name="type"]:checked').value);
 
-    let districtsContainer = document.querySelector('.districts'),
-        points = document.querySelector('.district-points'),
-        map = document.querySelector('.map'),
-        categoryId = document.querySelector('#type-select .select-active').getAttribute('data-categoryid'),
-        locationFilter = document.querySelector('.location-filter');
-    console.log(map);
-
+    let map = document.querySelector('.map');
     map.innerHTML += preloader;
-    
+
+    let districtsContainer = map.querySelector('.districts'),
+        points = map.querySelector('.district-points');
+
     let data = {
         type: type,
         rentType: rentType,
-        categoryId: categoryId,
+        categoryId: document.querySelector('#type-select .select-active').getAttribute('data-categoryid'),
         rand: getRandom()
     };
 
@@ -94,36 +91,27 @@ function GetFilterMap() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            console.log(data);
             districtsContainer.innerHTML = '';
             points.innerHTML = '';
 
-            for (const district of data.districts) {
-                console.log('cycle one');
-                districtsContainer.innerHTML = 
-                    `<p id="${district.alias}-district">
-                        <label>
-                            <input name="${district.alias}" type="checkbox" value="${district.value}">
-                            <span>${district.count}</span>${district.title}
-                        </label>
-                    </p>` + districtsContainer.innerHTML;
-            }
+            districtsContainer.innerHTML = data.districts.reduceRight((acc, obj) => {
+                return acc += `<p id="${obj.alias}-district">
+                                    <label>
+                                        <input name="${obj.alias}" type="checkbox" value="${obj.value}">
+                                        <span>${obj.count}</span>${obj.title}
+                                    </label>
+                                </p>`
+            }, '');
 
-            for (const point of data.districtPoints) {
-                console.log('cycle two');
-                points.innerHTML = 
-                    `<li id="${point.alias}-point" data-district="${point.alias}-district" style="display: none;"><a></a></li>` +
-                        points.innerHTML;
-            }
-            console.log(map.querySelector('svg'))
-            map.querySelector('svg').remove(); // check it
-            // map.fadeIn('500'); // needed??
-            map.style.display = '';
+            points.innerHTML = data.districtPoints.reduceRight((acc, obj) => {
+                return acc += 
+                    `<li id="${obj.alias}-point" data-district="${obj.alias}-district" style="display: none;"><a></a></li>`;
+            }, '');
+
+            map.querySelector('svg').remove();
             
         })
-        .catch (error => {
-            console.log('Request failed', error);
-        });  
+        .catch (error => console.log('Request failed', error));  
 }
 
 // загрузка топ объектов
@@ -358,70 +346,123 @@ function OnFilterSearch() {
 //Ajax загрузка горячих предложений недвижимости
 function GetHotRealEstates() {
     var searchResults = $('.site-search-results  .search-content');
-    var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    $('.search-logo').empty();
-    $('.filters, .show-filters, .absolute').show();
-    $('.search-panel-header, .main-categories, .search-time').hide();
-    $('#search-input').addClass('filter-search');
-    $('#site-search-results').parent('div').addClass('estate-content');
-    $('.parent-category').remove();
-    if (!isMobile.any()) {
+    var cultureKey = getUrlVars()["lang"] || 'en';
+
+    document.querySelector('.search-logo').innerHTML = '';
+    document.querySelectorAll('.filters, .show-filters, .absolute').forEach(node => 
+        node.style.display = '');
+    document.querySelectorAll('.search-panel-header, .main-categories, .search-time').forEach(node => 
+        node.style.display = 'none');
+    document.getElementById('search-input').classList.add('filter-search');
+
+
+    $('#site-search-results').parent('div').addClass('estate-content'); // ???
+
+    document.querySelector('.parent-category').remove();
+    if (!isMobile.any())
         $('.search-panel-body').css('top', '90px');
-    }
-    $.ajax({
-        url: 'https://thai360.info/api/get-hots-real-estates',
-        data: {
-            lang: cultureKey,
-            currency: $('#currency-select .select-active').attr('data-currency'),
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            searchResults.html(preloader);
-        },
-        success: function(data) {
-            var hots = data.hots;
-            var items = data.items;
-            var parentId = data.parentId;
-            searchResults.hide().empty();
-            $('.search-logo').append('<svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"\
-									viewBox="0 0 60 60" style="enable-background:new 0 0 60 60; fill: rgba(255,0,0, 1);" xml:space="preserve">\
-									<polyline class="st0" points="30,30 5.8,30 5.8,5.7 54.2,5.7 54.2,54.3 5.8,54.3 "/>\
-									<g>\
-									<path class="st1" d="M30,59.8C13.5,59.8,0.2,46.5,0.2,30S13.5,0.3,30,0.3S59.8,13.6,59.8,30S46.4,59.8,30,59.8z M30,2.3\
-									C14.6,2.3,2.2,14.7,2.2,30c0,15.3,12.5,27.8,27.8,27.8S57.8,45.4,57.8,30C57.8,14.7,45.3,2.3,30,2.3z"/>\
-									</g>\
-									<g>\
-									<path class="st1" d="M30,58.8H1.2V30c0,0-0.4,11.7,8.3,20.3S30,58.8,30,58.8z"/>\
-									<path class="st1" d="M30,59.8H0.2V30.6c0-0.3,0-0.5,0-0.6l2,0v0.4c0,1.9,0.6,11.8,8,19.2c8.3,8.2,19.6,8.3,19.8,8.3V59.8z\
-									M2.2,57.8h17.6c-3.5-1.3-7.5-3.4-11-6.8c-3.3-3.3-5.4-6.9-6.6-10.3V57.8z"/>\
-									</g>\
-								</svg>\
-								<i style="background-image: url(/assets/images/category-icons/R_Panel_Icon_Real_Estate.svg);"></i>').css('background-image', '').attr('data-id', 35).attr('data-category', '35-real-estate').attr('data-description', data.parentDescription).attr('data-url', data.parentUrl).attr('data-image', data.parentImage).attr('data-isfolder', 0);
-            $('#search').attr('placeholder', translation.Search(cultureKey));
-            $('.back').attr('data-id', parentId).attr('data-search-id', parentId);
-            var $container = searchResults.append('<div class="category-list"></div>').find('div.category-list');
-            for (key in hots) {
-                var item = hots[key];
-                $container.append('<div class="sisea-result estate">\
-															<a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div> <p>' + item.title + '</p>' + (item.sold == 'true' ? '<div class="sold"></div>' : '') + '</a>\
-															<div class="object-description">\
-															<p class="card-object-location"><i></i>' + item.location + '</p>\
-															<p class="card-object-category"><i></i>' + item.category + '</p>' + (item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>') + '<p class="card-area">' + item.area + ' <span>sq. m.</span></p>' + '<p class="object-sea-view">' + (item.seaView == 'true' ? 'Sea view' : '') + '</p>' + (item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + (item.sold == 'true' ? '<p class="object-price">Sold</p>' : (item.type == 1 ? '<p class="object-price">' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '<text> monthly+</text></p>' : (item.type == 2 ? '<p class="object-price">' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : '')))) + '</div>\
-															<div class="contact-object-btn"><img src="/assets/images/object_contact_icon.svg"/><span>' + translation.Contact(cultureKey) + '</span></div>\
-															<div class="favorite-object-btn"><img src="/assets/images/favorites_icon.svg"/><span>' + translation.Favorites(cultureKey) + '</span></div>\
-									</div>');
-                $.cookie('object_' + item.itemId, true, {
-                    expires: 300,
-                    path: '/'
-                });
-            };
-            searchResults.fadeIn('500');
-        }
-    });
+        
+
+    let data = {
+        currency: $('#currency-select .select-active').attr('data-currency'),
+        rand: getRandom()
+    };
+
+    let url = `https://thai360.info/api/get-hots-real-estates?lang=${cultureKey}${getUrlString(data)}`
+
+    searchResults.innerHTML = preloader;    
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'none';
+
+            let searchLogo = document.querySelector('.search-logo');
+            
+            searchLogo.innerHTML +=
+                `<svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg" 
+                    xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 60 60" style="enable-background:new 0 0 60 60; fill: rgba(255,0,0, 1);" xml:space="preserve">
+                        <polyline class="st0" points="30,30 5.8,30 5.8,5.7 54.2,5.7 54.2,54.3 5.8,54.3 "/>
+                        <g>
+                            <path class="st1" d="M30,59.8C13.5,59.8,0.2,46.5,0.2,30S13.5,0.3,30,0.3S59.8,13.6,59.8,30S46.4,59.8,30,59.8z M30,2.3
+                                C14.6,2.3,2.2,14.7,2.2,30c0,15.3,12.5,27.8,27.8,27.8S57.8,45.4,57.8,30C57.8,14.7,45.3,2.3,30,2.3z"/>
+                        </g>
+                        <g>
+                            <path class="st1" d="M30,58.8H1.2V30c0,0-0.4,11.7,8.3,20.3S30,58.8,30,58.8z"/>
+                            <path class="st1" d="M30,59.8H0.2V30.6c0-0.3,0-0.5,0-0.6l2,0v0.4c0,1.9,0.6,11.8,8,19.2c8.3,8.2,19.6,8.3,19.8,8.3V59.8z
+                                M2.2,57.8h17.6c-3.5-1.3-7.5-3.4-11-6.8c-3.3-3.3-5.4-6.9-6.6-10.3V57.8z"/>
+                        </g>
+                </svg>
+                <i style="background-image: url(/assets/images/category-icons/R_Panel_Icon_Real_Estate.svg);"></i>`;
+            
+            searchLogo.style.backgroundImage = '';
+            setAttributes(searchLogo, {
+                'data-id': 35,
+                'data-category': '35-real-estate',
+                'data-description': data.parentDescription,
+                'data-url': data.parentUrl,
+                'data-image': data.parentImage,
+                'data-isfolder': 0
+            });
+            console.log(searchLogo);// check attrs
+
+            document.getElementById('#search').setAttribute('placeholder', translation.Search(cultureKey));
+            setAttributes(document.querySelector('.back'), 
+                { 'data-id': data.parentId, 'data-search-id': data.parentId });
+
+            let container = document.createElement('div');
+            container.className = 'category-list';
+            container.innerHTML = data.hots.reduce((acc, item) => {
+                let obj = buildDOMObj(item);
+                
+                return acc += `<div class="sisea-result estate">
+                        <a href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
+                            title="${item.title}" style="background-image: url(${item.squareImg}?${randomHash});" 
+                            class="object" data-id="${item.itemId}">
+                                ${($.cookie('object_' + item.id) ? 
+                                    (obj[item.type] ? obj[item.type].divRent : '')
+                                    : '<div class="new"></div>')}
+                                    <div class="object-id">Id: ${item.itemId}</div>
+                                    <p>${item.title}</p>
+                                    ${(item.sold == 'true' ? '<div class="sold"></div>' : '')}
+                        </a>
+                        <div class="object-description">
+                            <p class="card-object-location"><i></i>${item.location}</p>
+                            <p class="card-object-category"><i></i>${item.category}</p>
+                            ${(item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>')}
+                            <p class="card-area">${item.area} 
+                            <span>sq. m.</span></p>
+                            <p class="object-sea-view">${(item.seaView == 'true' ? 'Sea view' : '')}</p>
+                            ${(item.pool == 0 ? '' : '<p class="card-pool">' + 
+                                (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + 
+                            (item.sold == 'true' ? '<p class="object-price">Sold</p>' 
+                                : (item.type == 1 ? `${obj[item.type].pPrice}<text> monthly+</text></p>` 
+                                    : (obj[item.type] ? obj[item.type].pPrice : '')))}
+                        </div>
+                        <div class="contact-object-btn">
+                            <img src="/assets/images/object_contact_icon.svg"/>
+                            <span>${translation.Contact(cultureKey)}</span>
+                        </div>
+                        <div class="favorite-object-btn">
+                            <img src="/assets/images/favorites_icon.svg"/>
+                            <span>${translation.Favorites(cultureKey)}</span>
+                        </div>
+                    </div>`
+            }, '');
+
+            $.cookie('object_' + item.itemId, true, {
+                expires: 300,
+                path: '/'
+            });
+
+            searchResults.appendChild(container);
+            searchResults.style.display = '';
+
+        })   
 }
+
 //Ajax загрузка категорий
 function OnCategorySearch(category, categoryId, isFolder, title) {
     if (categoryId == 35) {
@@ -436,11 +477,12 @@ function OnCategorySearch(category, categoryId, isFolder, title) {
 			cultureKey = 'en';
 		}
         var url = '';
-        if (!isFolder) {
+
+        if (!isFolder)
             url = 'https://thai360.info/api/objects';
-        } else {
+        else
             url = 'https://thai360.info/api/categories';
-        }
+            
         $.ajax({
             url: url,
             data: {
@@ -683,7 +725,7 @@ function OnLoadObjects(category, offset) {
 }
 
 
-//Ajax поиск на сайте
+// поиск на сайте
 function OnAjaxSearch(title, OnLoaded, count, exclude) {
     
     if (document.querySelector('.parent-category'))
@@ -717,9 +759,8 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
                 searchResults.innerHTML = '';
             }
 
-            document.querySelectorAll('#smallLoader, #loader').forEach(node => {
-                node.parentElement.removeChild(node);
-            })
+            document.querySelectorAll('#smallLoader, #loader').forEach(node => 
+                node.parentElement.removeChild(node));
 
             document.querySelector('.back').setAttribute('data-id', 1220);
             document.querySelector('.back').setAttribute('data-search-id', 1220);
@@ -734,27 +775,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
 
             for (const item of items) {
 
-                let obj = {
-                    1: {
-                        divRent: '<div class="rent"></div>',
-                        pPrice: `<p class="object-price">${priceToString(item.priceRentMonthly)} <b>${getPricesAndSymbol()}</b></p>`
-                    },
-                    2: {
-                        divRent: '<div class="sale"></div>',
-                        pPrice: `<p class="object-price">${priceToString(item.priceSale)} <b>${getPricesAndSymbol()}</b></p>`
-                    },
-                    3: {
-                        divRent: '<div class="sale-rent"></div>',
-                        pPrice: `<p class="second-object-price"><i>Rent: </i>
-                                        ${priceToString(item.priceRentMonthly)} 
-                                        <b>${getPricesAndSymbol()}</b>
-                                 </p>
-                                 <p class="object-price"><i>Sale: </i>
-                                        ${priceToString(item.priceSale)} 
-                                        <b>${getPricesAndSymbol()}</b>
-                                 </p>`
-                    }
-                }
+                let obj = buildDOMObj(item); // =============================
 
                 let firstRepeatable = `<a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
                                 title="${item.pagetitle}" 
@@ -1598,5 +1619,30 @@ function getUrlString(data) {
 function setAttributes(el, attrs) {
     for(var key in attrs) {
         el.setAttribute(key, attrs[key]);
+    }
+}
+
+// HTML building function
+function buildDOMObj(item) {
+    return {
+        1: {
+            divRent: '<div class="rent"></div>',
+            pPrice: `<p class="object-price">${priceToString(item.priceRentMonthly)} <b>${getPricesAndSymbol()}</b></p>`
+        },
+        2: {
+            divRent: '<div class="sale"></div>',
+            pPrice: `<p class="object-price">${priceToString(item.priceSale)} <b>${getPricesAndSymbol()}</b></p>`
+        },
+        3: {
+            divRent: '<div class="sale-rent"></div>',
+            pPrice: `<p class="second-object-price"><i>Rent: </i>
+                            ${priceToString(item.priceRentMonthly)} 
+                            <b>${getPricesAndSymbol()}</b>
+                     </p>
+                     <p class="object-price"><i>Sale: </i>
+                            ${priceToString(item.priceSale)} 
+                            <b>${getPricesAndSymbol()}</b>
+                     </p>`
+        }
     }
 }

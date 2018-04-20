@@ -839,6 +839,7 @@ function filterCleanBtn(e) {
     $('#sale-input input').prop('checked', true);
     $('.roomsFilter').show();
     $('.district-points li').hide();
+    GetFilterMap();
 }
 
 function nextNew() {
