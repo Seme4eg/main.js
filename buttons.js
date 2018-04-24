@@ -16,14 +16,13 @@ $(document).on('click', '#category-control-share-btns a', OnCloseCategoryShareBt
 //Кнопка на весь экран
 function fullScreen() {
     var panoWindow = document.getElementById('krpanoSWFObject');
-    var $this = $(this);
-    if ($this.hasClass('full-screen')) {
+    if (this.classList.contains('full-screen')) {
         panoWindow.set('fullscreen', false);
-        $this.removeClass('full-screen');
+        this.classList.remove('full-screen');
         $('.logo').css('z-index', 10000);
     } else {
         panoWindow.set('fullscreen', true);
-        $this.addClass('full-screen');
+        this.classList.add('full-screen');
         $('.logo').css('z-index', 10000000000);
     }
 }

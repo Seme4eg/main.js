@@ -1,3 +1,5 @@
+// --- refactored ones ---
+
 // загрузка родительских категорий
 function GetParentCategories() {
 
@@ -70,6 +72,8 @@ function GetFilterMap() {
         parseInt(document.querySelector('.radio-btns .select-list input:checked').value)
         : NaN;
         
+    console.log('rentType', rentType);
+        
     let type = parseInt(document.querySelector('.radio-btns input[name="type"]:checked').value);
 
     let map = document.querySelector('.map');
@@ -130,16 +134,14 @@ function GetTopObjects() {
     // document.querySelector('.parent-category').remove(); -- element does not exist
     document.querySelectorAll('.absolute, .filters, .filters-body').forEach(node =>
         node.style.display = 'none');
-    // test this
-    document.querySelector('.filters-body').classList.remove('active');
+    document.querySelector('.filters-body').classList.remove('active'); // test
     
     let searchResults = document.querySelector('.site-search-results .search-content'),
         cultureKey = getUrlVars()['lang'] || 'en';
     
     let url = `https://thai360.info/api/get-top-objects?lang=${cultureKey}&rand=${getRandom()}`;
 
-    // searchResults.html(preloader);
-    searchResults.innerHTML = preloader; // его не видел, возможно слишком быстро подгружается
+    searchResults.innerHTML = preloader;
     
     fetch(url)
         .then(response => response.json())
@@ -151,13 +153,14 @@ function GetTopObjects() {
             document.getElementById('search').setAttribute('placeholder', translation.Search(cultureKey));
             document.querySelector('.back').setAttribute('data-id', 0);
             document.querySelector('.back').setAttribute('data-search-id', 0);
+            setAttributes(document.querySelector('.back'),
+                {'data-id': 0, 'data-search-id': 0})
 
             // adding 'container' element:
             let container = document.createElement('div');
             container.className = 'category-list';
 
             for (const item of items) {
-
                 let obj = {
                     1: {
                         class: '<div class="rent"></div>',
@@ -245,107 +248,209 @@ function GetTopObjects() {
 
 //Ajax загрузка объектов по фильтру(раздел недвижимости)
 function OnFilterSearch() {
-    $('.filters-body, .hide-filters, .search-panel-header').hide();
-    $('.filters-body').removeClass('active');
-    $('.search-logo').attr('data-isfilter', 1);
     isLoaded = true;
-    var priceNowMin = parseInt($("#slider-range").slider("values", 0));
-    var priceNowMax = parseInt($("#slider-range").slider("values", 1));
-    $('.scroll-wrapper.site-search-results, .show-filters, .sisea-search-form, .search-panel-footer').show();
-    var districts = getDistrictArray();
-    var rentType = parseInt($('.radio-btns .select-list input:checked').val());
-    var categoryId = $('#type-select .select-active').attr('data-categoryId');
-    var type = $('.radio-btns input[name="type"]:checked').val();
-    $('.parent-category').remove();
-    var searchResults = $('.site-search-results .search-content');
+
+    document.querySelectorAll('.filters-body, .hide-filters, .search-panel-header').forEach(node => 
+        node.style.display = 'none');
+    document.querySelector('.filters-body').classList.remove('active');
+    document.querySelector('.search-logo').setAttribute('data-isfilter', 1);
+    document.querySelectorAll('.scroll-wrapper.site-search-results, .show-filters, .sisea-search-form, .search-panel-footer')
+        .forEach(node => node.style.display = '');
+    
+    let districts = getDistrictArray();
+    let rentType = document.querySelector('.radio-btns .select-list input:checked') ?
+        parseInt(document.querySelector('.radio-btns .select-list input:checked').value)
+        : NaN;
+    var categoryId = document.querySelector('#type-select .select-active').getAttribute('data-categoryId');
+    var type = document.querySelector('.radio-btns input[name="type"]:checked').value;
+    
+    // document.querySelector('.parent-category').remove(); // node not exist..
+    
+    var searchResults = document.querySelector('.site-search-results .search-content');
     var cultureKey = getUrlVars()["lang"] || 'en';
 
-    $.ajax({
-        url: 'https://thai360.info/api/get-real-estate-objects',
-        data: {
-            categoryId: categoryId,
-            lang: cultureKey,
-            type: type,
-            rentType: rentType,
-            currency: $('#currency-select .select-active').attr('data-currency'),
-            bedroomsMin: $("#slider-beds").slider("values", 0),
-            bedroomsMax: $("#slider-beds").slider("values", 1),
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            searchResults.html(preloader);
-        },
-        success: function(data) {
-            var items = data.items;
-            var parentId = data.parentId;
-            var count = 1;
-            searchResults.hide().empty();
-            $('#search').attr('placeholder', translation.Search(cultureKey));
-            $('.back').attr('data-id', parentId).attr('data-search-id', parentId);
-            $('.absolute').show();
-            var $container = searchResults.append('<div class="category-list"></div>').find('div.category-list');
+    let data = {
+        categoryId: categoryId,
+        type: type,
+        rentType: rentType,
+        currency: document.querySelector('#currency-select .select-active').getAttribute('data-currency'),
+        bedroomsMin: $("#slider-beds").slider("values", 0),
+        bedroomsMax: $("#slider-beds").slider("values", 1),
+        rand: getRandom()
+    }
+
+    let url = `https://thai360.info/api/get-real-estate-objects?lang=${cultureKey}${getUrlString(data)}`;
+
+    searchResults.innerHTML = preloader;
+
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let [items, parentId, count] = [data.items, data.parentId, 1];
+            let priceNowMin = parseInt($("#slider-range").slider("values", 0));
+            let priceNowMax = parseInt($("#slider-range").slider("values", 1));
+            
+            searchResults.innerHTML = ''; // может убрать прелоадер в конце?
+
+            document.getElementById('search').setAttribute('placeholder', translation.Search(cultureKey));
+            setAttributes(document.querySelector('.back'), {'data-id': parentId, 'data-search-id': parentId});
+            document.querySelector('.absolute').style.display = 'none';
+
+            let container = document.createElement('div');
+            container.className = 'category-list'; // don't forget to append to 'searchresults'
+
             if (type == 1) {
-                for (key in items) {
-                    var item = items[key];
-                    if (rentType == 1 && categoryId != '327-land') {
-                        if (parseInt(item.priceRentDaily) >= priceNowMin && parseInt(item.priceRentDaily) <= priceNowMax && parseInt(item.priceRentDaily) != 0 && (count <= 10) && (districts == 0 || districts.indexOf(item.district) >= 0)) {
-                            $container.append('<div class="sisea-result estate offset">\
-															<a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div><p>' + item.title + '</p></a>\
-															<div class="object-description">\
-															<p class="card-object-location"><i></i>' + item.location + '</p>\
-															<p class="card-object-category"><i></i>' + item.category + '</p>' + (item.categoryId != '327-land' ? '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>' : '') + '<p class="card-area">' + item.area + ' <span>sq. m.</span></p>' + '<p class="object-sea-view">' + (item.seaView == 'true' ? 'Sea view' : '') + '</p>' + (item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentDaily) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : '<p class="object-price">' + priceToString(item.priceRentDaily) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>') + '</div>\
-															<div class="contact-object-btn"><img src="/assets/images/object_contact_icon.svg"/><span>' + translation.Contact(cultureKey) + '</span></div>\
-															<div class="favorite-object-btn"><img src="/assets/images/favorites_icon.svg"/><span>' + translation.Favorites(cultureKey) + '</span></div>\
-									</div>');
-                            count++;
-                        };
-                    } else {
-                        if (parseInt(item.priceRentMonthly) >= priceNowMin && parseInt(item.priceRentMonthly) <= priceNowMax && parseInt(item.priceRentMonthly) != 0 && (count <= 10) && (districts == 0 || districts.indexOf(item.district) >= 0)) {
-                            $container.append('<div class="sisea-result estate offset">\
-															<a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div><p>' + item.title + '</p></a>\
-															<div class="object-description">\
-															<p class="card-object-location"><i></i>' + item.location + '</p>\
-															<p class="card-object-category"><i></i>' + item.category + '</p>' + (item.categoryId != '327-land' ? '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>' : '') + '<p class="card-area">' + item.area + ' <span>sq. m.</span></p>' + '<p class="object-sea-view">' + (item.seaView == 'true' ? 'Sea view' : '') + '</p>' + (item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : '<p class="object-price">' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '<text> monthly+</text></p>') + '</div>\
-															<div class="contact-object-btn"><img src="/assets/images/object_contact_icon.svg"/><span>' + translation.Contact(cultureKey) + '</span></div>\
-															<div class="favorite-object-btn"><img src="/assets/images/favorites_icon.svg"/><span>' + translation.Favorites(cultureKey) + '</span></div>\
-									</div>');
-                            count++;
-                        };
-                    }
+                container.innerHTML = items.reduce((acc, item) => {
+                    let [a, b] = [parseInt(item.priceRentDaily), parseInt(item.priceRentMonthly)];
+                    
                     $.cookie('object_' + item.itemId, true, {
                         expires: 300,
                         path: '/'
                     });
-                }
-            } else {
-                for (key in items) {
-                    var item = items[key];
-                    if ((parseInt(item.priceSale) >= priceNowMin) && (parseInt(item.priceSale) <= priceNowMax) && (count <= 10) && (districts == 0 || districts.indexOf(item.district) >= 0)) {
-                        $container.append('<div class="sisea-result estate offset">\
-															<a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div><p>' + item.title + '</p></a>\
-															<div class="object-description">\
-															<p class="card-object-location"><i></i>' + item.location + '</p>\
-															<p class="card-object-category"><i></i>' + item.category + '</p>' + (item.categoryId != '327-land' ? '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>' : '') + '<p class="card-area">' + item.area + ' <span>sq. m.</span></p>' + '<p class="object-sea-view">' + (item.seaView == 'true' ? 'Sea view' : '') + '</p>' + (item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : '<p class="object-price">' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>') + '</div>\
-															<div class="contact-object-btn"><img src="/assets/images/object_contact_icon.svg"/><span>' + translation.Contact(cultureKey) + '</span></div>\
-															<div class="favorite-object-btn"><img src="/assets/images/favorites_icon.svg"/><span>' + translation.Favorites(cultureKey) + '</span></div>\
-									</div>');
+                    
+                    if (rentType == 1 && categoryId != '327-land') {
+                        if (a >= priceNowMin && a <= priceNowMax && a != 0 && (count <= 10) && (districts == 0 || districts.indexOf(item.district) >= 0)) {
+                            count++;
+
+                            return acc += `<div class="sisea-result estate offset">
+                                    <a href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
+                                        title="${item.title}" style="background-image: url(${item.squareImg}?${randomHash});" 
+                                        class="object" data-id="${item.itemId}">
+                                            ${($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + 
+                                                (item.type == 3 ? '<div class="sale-rent"></div>' : '') 
+                                                    : '<div class="new"></div>')}
+                                            <div class="object-id">Id: ${item.itemId}</div><p>${item.title}</p>
+                                    </a>
+                                    <div class="object-description">
+                                        <p class="card-object-location"><i></i>${item.location}</p>
+                                        <p class="card-object-category"><i></i>${item.category}</p>
+                                        ${(item.categoryId != '327-land' ? '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>' : '')}
+                                        <p class="card-area">${item.area} <span>sq. m.</span></p>
+                                        <p class="object-sea-view">${(item.seaView == 'true' ? 'Sea view' : '')}</p>
+                                        ${(item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + 
+                                        (item.type == 3 ? 
+                                            `<p class="second-object-price"><i>Rent: </i>
+                                                ${priceToString(item.priceRentDaily)} 
+                                                <b>${getPricesAndSymbol()}</b>
+                                            </p>
+                                            <p class="object-price"><i>Sale: </i>
+                                                ${priceToString(item.priceSale)} 
+                                                <b>${getPricesAndSymbol()}</b>
+                                            </p>` 
+                                                : `<p class="object-price">${priceToString(item.priceRentDaily)} <b>${getPricesAndSymbol()}</b></p>`)}
+                                    </div>
+                                    <div class="contact-object-btn">
+                                        <img src="/assets/images/object_contact_icon.svg"/><span>${translation.Contact(cultureKey)}</span>
+                                    </div>
+                                    <div class="favorite-object-btn">
+                                        <img src="/assets/images/favorites_icon.svg"/><span>${translation.Favorites(cultureKey)}</span>
+                                    </div>
+                                </div>`;
+                        }
+                    } else if (b >= priceNowMin && b <= priceNowMax && b != 0 && (count <= 10) && (districts == 0 || districts.indexOf(item.district) >= 0)) {
                         count++;
+
+                        return acc += `<div class="sisea-result estate offset">
+                                <a href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
+                                    title="${item.title}" style="background-image: url(${item.squareImg}?${randomHash});" 
+                                    class="object" data-id="${item.itemId}">
+                                        ${($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + 
+                                            (item.type == 3 ? '<div class="sale-rent"></div>' : '') 
+                                                : '<div class="new"></div>')}
+                                        <div class="object-id">Id: ${item.itemId}</div><p>${item.title}</p>
+                                </a>
+                                <div class="object-description">
+                                    <p class="card-object-location"><i></i>${item.location}</p>
+                                    <p class="card-object-category"><i></i>${item.category}</p>
+                                    ${(item.categoryId != '327-land' ? '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>' : '')}
+                                    <p class="card-area">${item.area} <span>sq. m.</span></p>
+                                    <p class="object-sea-view">
+                                        ${(item.seaView == 'true' ? 'Sea view' : '')}</p>
+                                        ${(item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + 
+                                        (item.type == 3 ? `<p class="second-object-price"><i>Rent: </i>
+                                                ${priceToString(item.priceRentMonthly)} 
+                                                <b>${getPricesAndSymbol()}</b>
+                                            </p>
+                                            <p class="object-price"><i>Sale: </i>
+                                                ${priceToString(item.priceSale)}
+                                                <b>${getPricesAndSymbol()}</b>
+                                            </p>` 
+                                                : `<p class="object-price">${priceToString(item.priceRentMonthly)} <b>${getPricesAndSymbol()}</b><text> monthly+</text></p>`)}
+                                </div>
+                                <div class="contact-object-btn">
+                                    <img src="/assets/images/object_contact_icon.svg"/><span>${translation.Contact(cultureKey)}</span>
+                                </div>
+                                <div class="favorite-object-btn">
+                                    <img src="/assets/images/favorites_icon.svg"/><span>${translation.Favorites(cultureKey)}</span>
+                                </div>
+                            </div>`
+                    }
+
+                    return acc;
+
+                }, '');
+            } else {
+                console.log('else');
+                container.innerHTML = items.reduce((acc, item) => {
+                    let a = parseInt(item.priceSale);
+
+                    if ((a >= priceNowMin) && (a <= priceNowMax) && (count <= 10) && (districts == 0 || districts.indexOf(item.district) >= 0)) {
+                        count++;
+
                         $.cookie('object_' + item.itemId, true, {
                             expires: 300,
                             path: '/'
                         });
-                    };
-                }
+
+                        return acc += `<div class="sisea-result estate offset">
+                                <a href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
+                                    title="${item.title}" style="background-image: url(${item.squareImg}?${randomHash});" 
+                                    class="object" data-id="${item.itemId}">
+                                        ${($.cookie('object_' + item.itemId) ? (item.type == 2 ? '<div class="sale"></div>' : '') + 
+                                            (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>')}
+                                        <div class="object-id">Id: ${item.itemId}</div><p>${item.title}</p>
+                                </a>
+                                <div class="object-description">
+                                    <p class="card-object-location"><i></i>${item.location}</p>
+                                    <p class="card-object-category"><i></i>${item.category}</p>
+                                        ${(item.categoryId != '327-land' ? '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>' : '')}
+                                        <p class="card-area">${item.area} <span>sq. m.</span></p>
+                                        <p class="object-sea-view">${(item.seaView == 'true' ? 'Sea view' : '')}</p>
+                                        ${(item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>') + 
+                                        (item.type == 3 ? `<p class="second-object-price"><i>Rent: </i>
+                                                ${priceToString(item.priceRentMonthly)} 
+                                                <b>${getPricesAndSymbol()}</b>
+                                            </p>
+                                            <p class="object-price"><i>Sale: </i>
+                                                ${priceToString(item.priceSale)} 
+                                                <b>${getPricesAndSymbol()}</b>
+                                            </p>` 
+                                        : `<p class="object-price">${priceToString(item.priceSale)} <b>${getPricesAndSymbol()}</b></p>`)}
+                                </div>
+                                <div class="contact-object-btn">
+                                    <img src="/assets/images/object_contact_icon.svg"/><span>${translation.Contact(cultureKey)}</span>
+                                </div>
+                                <div class="favorite-object-btn">
+                                    <img src="/assets/images/favorites_icon.svg"/><span>${translation.Favorites(cultureKey)}</span>
+                                </div>
+                            </div>`
+                    }
+
+                    return acc;
+                }, '');
             }
-            searchResults.fadeIn('500');
-        }
-    });
+
+            searchResults.appendChild(container);
+            searchResults.style.display = '';
+            
+        })
 }
 
 
-//Ajax загрузка горячих предложений недвижимости
+// загрузка горячих предложений недвижимости
 function GetHotRealEstates() {
-    var searchResults = $('.site-search-results  .search-content');
+    var searchResults = document.querySelector('.site-search-results .search-content');
     var cultureKey = getUrlVars()["lang"] || 'en';
 
     document.querySelector('.search-logo').innerHTML = '';
@@ -358,13 +463,12 @@ function GetHotRealEstates() {
 
     $('#site-search-results').parent('div').addClass('estate-content'); // ???
 
-    document.querySelector('.parent-category').remove();
+    // document.querySelector('.parent-category').remove(); // node not exist
     if (!isMobile.any())
         $('.search-panel-body').css('top', '90px');
         
-
     let data = {
-        currency: $('#currency-select .select-active').attr('data-currency'),
+        currency: document.querySelector('#currency-select .select-active').getAttribute('data-currency'),
         rand: getRandom()
     };
 
@@ -406,9 +510,8 @@ function GetHotRealEstates() {
                 'data-image': data.parentImage,
                 'data-isfolder': 0
             });
-            console.log(searchLogo);// check attrs
 
-            document.getElementById('#search').setAttribute('placeholder', translation.Search(cultureKey));
+            document.getElementById('search').setAttribute('placeholder', translation.Search(cultureKey));
             setAttributes(document.querySelector('.back'), 
                 { 'data-id': data.parentId, 'data-search-id': data.parentId });
 
@@ -416,6 +519,11 @@ function GetHotRealEstates() {
             container.className = 'category-list';
             container.innerHTML = data.hots.reduce((acc, item) => {
                 let obj = buildDOMObj(item);
+
+                $.cookie('object_' + item.itemId, true, {
+                    expires: 300,
+                    path: '/'
+                });
                 
                 return acc += `<div class="sisea-result estate">
                         <a href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
@@ -449,52 +557,394 @@ function GetHotRealEstates() {
                             <img src="/assets/images/favorites_icon.svg"/>
                             <span>${translation.Favorites(cultureKey)}</span>
                         </div>
-                    </div>`
+                    </div>`;
+                    
             }, '');
-
-            $.cookie('object_' + item.itemId, true, {
-                expires: 300,
-                path: '/'
-            });
 
             searchResults.appendChild(container);
             searchResults.style.display = '';
 
-        })   
+        })
 }
+
+// поиск на сайте
+function OnAjaxSearch(title, OnLoaded, count, exclude) {
+    
+    if (document.querySelector('.parent-category'))
+        document.querySelector('.parent-category').remove();
+    
+    let searchResults = document.querySelector('.site-search-results .search-content'),
+        cultureKey = getUrlVars()["lang"] || 'en',
+        categoryId = getElAttr('.search-logo', 'data-category'),
+        currency = getElAttr('#currency-select .select-active', 'data-currency');
+
+    let data = {
+        title: title,
+        offset: count,
+        exclude: exclude,
+        categoryId: categoryId,
+        currency: currency,
+        rand: getRandom()
+    }
+
+    let url = `https://thai360.info/api/ajax-search?lang=${cultureKey}${getUrlString(data)}`;
+
+    searchResults.innerHTML = OnLoaded ? searchResults.innerHTML + smallPreloader
+                                : preloader;
+
+    // fetching data
+    fetch(url)
+        .then(response => response.json())
+        .then(items => {
+            if (!OnLoaded) {
+                searchResults.style.display = 'none';
+                searchResults.innerHTML = '';
+            }
+
+            document.querySelectorAll('#smallLoader, #loader').forEach(node => 
+                node.parentElement.removeChild(node));
+
+            document.querySelector('.back').setAttribute('data-id', 1220);
+            document.querySelector('.back').setAttribute('data-search-id', 1220);
+
+            let container = searchResults.querySelector('.category-list');
+
+            if (!OnLoaded) {
+                container = document.createElement('div');
+                container.className = 'category-list';
+                searchResults.appendChild(container);
+            }
+
+            for (const item of items) {
+
+                let obj = buildDOMObj(item); // =============================
+
+                let firstRepeatable = `<a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
+                                title="${item.pagetitle}" 
+                                style="background-image: url(${item.square_img}?${randomHash});" 
+                                class="object" data-id="${item.id}">
+                                ${($.cookie('object_' + item.id) ? 
+                                    (obj[item.typeRealEstate] ? obj[item.typeRealEstate].divRent : '')
+                                    : '<div class="new"></div>')}
+                                <div class="object-id">Id: ${item.id}</div> 
+                                <p>${item.pagetitle}</p>`,
+                    secondRepeatable = `</a>
+                            <div class="object-description">
+                                <p class="card-object-location"><i></i>${item.districtTitle}</p>
+                                <p class="card-object-category"><i></i>${item.categoryTitle}</p>
+                                ${(item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>')}
+                                <p class="card-area">${item.area} <span>sq. m.</span></p>`;
+                
+                let categorySvgBorder = 
+                    `<svg version="1.1" 
+                        id="Layer_2" 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 60 60" 
+                        style="enable-background:new 0 0 60 60; fill:rgba(255,222,0, 1);" 
+                        xml:space="preserve">
+                            <polyline class="st0" points="30,30 5.8,30 5.8,5.7 54.2,5.7 54.2,54.3 5.8,54.3 "></polyline>
+                            <g>
+                                <path class="st1" d="M30,59.8C13.5,59.8,0.2,46.5,0.2,30S13.5,0.3,30,0.3S59.8,13.6,59.8,30S46.4,59.8,30,59.8z M30,2.3C14.6,2.3,2.2,14.7,2.2,30c0,15.3,12.5,27.8,27.8,27.8S57.8,45.4,57.8,30C57.8,14.7,45.3,2.3,30,2.3z"></path>
+                            </g>
+                            <g>
+                                <path class="st1" d="M30,58.8H1.2V30c0,0-0.4,11.7,8.3,20.3S30,58.8,30,58.8z"></path>
+                                <path class="st1" d="M30,59.8H0.2V30.6c0-0.3,0-0.5,0-0.6l2,0v0.4c0,1.9,0.6,11.8,8,19.2c8.3,8.2,19.6,8.3,19.8,8.3V59.8zM2.2,57.8h17.6c-3.5-1.3-7.5-3.4-11-6.8c-3.3-3.3-5.4-6.9-6.6-10.3V57.8z"></path>
+                            </g>&nbsp;
+                     </svg>`;
+
+                container.innerHTML += item.template == 4 ?
+                    `<div class="sisea-result slide offset ${item.catClass}">
+                        <a data-id="${item.id}" data-search-id="${item.id}-${item.alias}" 
+                        title="${item.pagetitle}" class="search-category" 
+                        style="background-image: url(${item.image}?${randomHash});">
+                            <p><i class="category-icon" 
+                                style="background-image: url(/${item.icon});">
+                            </i>${categorySvgBorder + item.longtitle}
+                            </p>
+                        </a>
+                    </div>`
+
+                    : categoryId == '35-real-estate' ? 
+                        `<div class="sisea-result estate offset">
+                            ${firstRepeatable}
+                            ${secondRepeatable}
+
+                                <p class="object-sea-view">${(item.seaView == 'true' ? 'Sea view' : '')}</p>
+                                ${(item.pool == 0 ? '' : '<p class="card-pool">' + 
+                                    (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>')}
+                                ${item.sold == 'true' ? '<p class="object-price">Sold</p>' 
+                                    : (obj[item.typeRealEstate] ? obj[item.typeRealEstate].pPrice : '')}
+                            </div>
+                            <div class="contact-object-btn">
+                                <img src="/assets/images/object_contact_icon.svg"/>
+                                <span>${translation.Contact(cultureKey)}</span>
+                            </div>
+                            <div class="favorite-object-btn">
+                                <img src="/assets/images/favorites_icon.svg"/>
+                                <span>${translation.Favorites(cultureKey)}</span>
+                            </div>
+                        </div>`
+                    
+                    : (obj[item.typeRealEstate]) ?
+                        `<div class="sisea-result estate search offset">
+                            ${firstRepeatable}
+                                ${(item.sold == 'true' ? '<div class="sold"></div>' : '')}
+                            ${secondRepeatable}
+                                ${item.sold == 'true' ? '<p class="object-price">Sold</p>' 
+                                    : (obj[item.typeRealEstate] ? obj[item.typeRealEstate].pPrice : '')}
+                            </div>
+                        </div>`
+                    
+                    : `<div class="sisea-result slide offset">
+                            <a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
+                            title="${item.pagetitle}" 
+                            style="background-image: url(${item.img}?${randomHash});" 
+                            class="object" data-id="${item.id}">
+                                    ${($.cookie('object_' + item.id) ? '' : '<div class="new"></div>')}
+                                    <p>
+                                        <span class="title-district">${item.districtTitle}</span> 
+                                        ${item.pagetitle + (item.longtitletwo.length > 3 ? '<br>' + item.longtitletwo : '')}
+                                    </p>
+                            </a>
+                        </div>`;
+            }
+
+            isLoaded = items.length >= 10 ? true : false;
+
+            // searchResults.fadeIn('500');
+            searchResults.style.display = '';
+            
+        })
+}
+
+//Ajax загрузка панораммы на сайт
+function getPano(itemId) {
+    panoIsLoad = false;
+    
+    clearTimeout(videoTimeOut);
+    
+    // $('#day-night-btn div').remove().hide();
+    document.querySelectorAll('#day-night-btn div, #video-object-btn div, #about-object-btn div, .sample-info').forEach(node => 
+        node.remove());
+    // node doesn't exist:
+    // document.querySelector('#day-night-btn div').style.display = 'none';
+    
+    let panoContainer = document.getElementById('tourDIV'),
+        videoContainer = document.querySelector('.video-modal-content'),
+        panoLocation = document.getElementById('panoLocation');
+    
+    let cultureKey = getUrlVars()["lang"] || 'en';
+    let data = {
+        cultureKey: cultureKey,
+        itemId: itemId,
+        rand: getRandom()
+    }
+
+    let url = `https://thai360.info/api/get-object?lang=${cultureKey}${getUrlString(data)}`;
+
+    // fetching data
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            panoVrXml = data.panoUrl + 'indexdata/index_vr.xml';
+            panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
+
+            var player = document.querySelector('.audio-player .play-list'),
+                audioLink = data.audioLink,
+                mainPanoLink = parseInt(data.mainPanoLink) == 0 ? data.mainPanoLink : data.mainPanoLink + '&lang=' + cultureKey;
+                
+            document.getElementById('search-panel').setAttribute('data-place-id', data.placeId);
+            
+            if (audioLink != musicLink){
+                musicLink = audioLink;
+                player.innerHTML = '';
+                data.audioFiles.split(',').forEach(item => {
+                    player.innerHTML += `<li data-link="${item}"></li>`;
+                });
+
+                let stopPlay = document.getElementById('stop-play');
+                stopPlay.className += ' first-click';
+                if (stopPlay.classList.contains('active')) {
+                    // check for working
+                    stopPlay.click();
+                    setTimeout(() => stopPlay.click(), 2000);
+                }
+            }
+            if (data.published == 0)
+                window.location.hash = '#!p=26-phuket&s=pano12&lang=' + cultureKey;
+            else {
+                if (firstLoad || $.cookie('video_' + data.id) || parseInt(data.video) == 0) {}
+				else{
+					videoTimeOut = setTimeout(() => {
+                        document.getElementById('video-object-btn').innerHTML +=
+                            `<div class="animation-border"></div>
+                            <div class="animation-background"></div>
+                            <div class="btn-animation"></div>`;
+                    }, 10000);
+				}
+                if ((!firstLoad) && (!$.cookie('object_info'))) {
+                    document.getElementById('about-object-btn').innerHTML +=
+                        `<div class="animation-border"></div>
+                        <div class="animation-background"></div>
+                        <div class="btn-animation"></div>`
+                }
+                if (!$.cookie('day_night_' + itemId)) {
+                    document.getElementById('day-night-btn').innerHTML +=
+                        `<div class="animation-border"></div>
+                        <div class="animation-background"></div>
+                        <div class="btn-animation"></div>`;
+                }
+                if (!$.cookie('object_' + itemId)) {
+                    $.cookie('object_' + itemId, true, {
+                        expires: 300,
+                        path: '/'
+                    });
+                }
+                document.querySelectorAll('.search-logo, .logo').forEach(node => {
+                    node.setAttribute('href', `${data.parentPoint}&lang=${cultureKey}`);
+                })
+                // check this for quselectoring
+                document.querySelectorAll("meta[name='description'], meta[property='og:description']").forEach(node => 
+                    node.setAttribute('content', data.description));
+                document.querySelector("meta[name='keywords']").setAttribute('content', data.keywords);
+                document.querySelectorAll("meta[property='og:image'], meta[property='og:image:secure_url'], meta[name='twitter:image']")
+                    .forEach(node => 
+                        node.setAttribute('content', data.image));
+                document.querySelector("link[rel='image_src']").setAttribute('href', data.image);
+                document.querySelector("link[rel='alternate']").setAttribute('hreflang', cultureKey);
+                document.querySelector("link[rel='alternate']").setAttribute('href', window.location.href);
+                document.querySelector("meta[property='og:url']").setAttribute('content', window.location.href);
+                document.getElementById('home-btn').setAttribute('data-link', mainPanoLink);
+
+                isVRModeRequested() ? accessWebVr() 
+                    : firstLoad ? accessStdVr() 
+                        : OnLoadPano(panoXml, getUrlVars()["s"]);
+                
+                // port this in future..
+                let videoObjBtn = document.getElementById('video-object-btn');
+                
+                // if ((data.video != null || data.video != '' || data.video != undefined) && data.video)
+                data.video ? videoObjBtn.setAttribute('data-code', data.video) : 
+                    videoObjBtn.setAttribute('data-code', 0);
+
+                let or = data.template == 3;
+                let str = or ? `${data.longtitle}-${siteName}` : data.seoTitle;
+                
+                document.title = str; // true?
+                document.querySelectorAll("meta[name='title'], meta[property='og:title']").forEach(node =>
+                    node.setAttribute('content', str));
+
+                panoLocation.innerHTML = or ?
+                     `${translation.Thailand(cultureKey)}<br><span>${data.title}</span>` :
+                     `${translation.Thailand(cultureKey)}<br><span>${data.location}<br>
+                        ${data.longtitle + (data.isRealEstate == true ? ' ID: ' + data.id : '')}</span>`;
+
+                if (data.isSample)
+                    document.getElementById('tourDIV').innerHTML += 
+                        '<div class="sample-info">' + translation.Sample_Tour(cultureKey) + '</div>'
+            }
+
+        })
+        .then(() => {
+            panoIsLoad = true;
+            
+            if(!firstLoad){
+                // ga - NOT DEFINED
+                ga('create', 'UA-90941148-2', 'auto', 'myAnalytics');
+                ga('myAnalytics.send', 'pageview', location.pathname + location.search + location.hash);
+                ga('myAnalytics.remove');
+
+                if(parseInt(itemId) == 26 && isMobile.AndroidApp()){
+                    setTimeout(() => {
+                        var krpano = document.getElementById("krpanoSWFObject");
+                        krpano.set('hotspot[spotpoint1590].visible', false);
+                        krpano.set('hotspot[spotpoint1593].visible', false);
+                        krpano.set('hotspot[spotpoint1594].visible', false);
+                    }, 500);
+                }
+            } else firstLoad = false;
+            
+            // NOT DEFINED
+            fbq('track', 'PageView');
+            fbq('track','ViewContent',{value:3.50, currency:'USD', content_name: $('title').text()});
+        })
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Ajax загрузка категорий
 function OnCategorySearch(category, categoryId, isFolder, title) {
-    if (categoryId == 35) {
-        GetHotRealEstates();
-    } else {
-        $('.search-logo').empty();
-        $('.absolute, .filters, .filters-body').hide();
-        $('.filters-body').removeClass('active');
-        var searchResults = $('.site-search-results .search-content');
-        var cultureKey = getUrlVars()["lang"];
-		if(typeof cultureKey === 'undefined'){
-			cultureKey = 'en';
-		}
-        var url = '';
 
-        if (!isFolder)
-            url = 'https://thai360.info/api/objects';
-        else
-            url = 'https://thai360.info/api/categories';
+    if (categoryId == 35) GetHotRealEstates();
+    else {
+        document.querySelector('.search-logo').innerHTML = '';
+        document.querySelectorAll('.absolute, .filters, .filters-body').forEach(node => 
+            node.style.dysplay = 'none');
+        document.querySelector('.filters-body').classList.remove('active');
+        
+        let searchResults = document.querySelector('.site-search-results .search-content');
+        let cultureKey = getUrlVars()["lang"] || 'en';
+
+        let data = {
+            parents: category,
+            categoryId: categoryId,
+            pagetitle: title,
+            rand: getRandom()
+        }
+        let url = (!isFolder) ? `https://thai360.info/api/objects?lang=${cultureKey}${getUrlString(data)}`
+            : `https://thai360.info/api/categories?lang=${cultureKey}${getUrlString(data)}`
+
+
+        searchResults.innerHTML = preloader;
+            
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let [items, parentId, parentCategory] = [data.items, data.parentId, data.parentCategory];
+
+                searchResults.innerHTML = '';
+                searchResults.style.display = 'none';
+
+                document.getElementById('search').setAttribute('placeholder', translation.Search(cultureKey));
+
+                let baseUrl = (cultureKey == 'en') ? '/' : `/${cultureKey}/`;
+
+                setAttributes(document.querySelector('.back'),
+                    {'data-id': parentId, 'data-search-id': parentCategory});
+
+                if (categoryId != 1220)
+                    document.querySelector('.abcolute').style.dysplay = 'none';
+                if (!isMobile.any()) {
+                    document.querySelector('.search-panel-header').style.dysplay = '';
+                    document.querySelector('.search-panel-body').style.top = '150px';
+                }
+            })
             
         $.ajax({
-            url: url,
-            data: {
-                parents: category,
-                categoryId: categoryId,
-                lang: cultureKey,
-                pagetitle: title,
-				rand: getRandom()
-            },
-            beforeSend: function() {
-                searchResults.html(preloader);
-            },
             success: function(data) {
                 var items = data.items;
                 var parentId = data.parentId;
@@ -724,311 +1174,6 @@ function OnLoadObjects(category, offset) {
     });
 }
 
-
-// поиск на сайте
-function OnAjaxSearch(title, OnLoaded, count, exclude) {
-    
-    if (document.querySelector('.parent-category'))
-        document.querySelector('.parent-category').remove();
-    
-    let searchResults = document.querySelector('.site-search-results .search-content'),
-        cultureKey = getUrlVars()["lang"] || 'en',
-        categoryId = getElAttr('.search-logo', 'data-category'),
-        currency = getElAttr('#currency-select .select-active', 'data-currency');
-
-    let data = {
-        title: title,
-        offset: count,
-        exclude: exclude,
-        categoryId: categoryId,
-        currency: currency,
-        rand: getRandom()
-    }
-
-    let url = `https://thai360.info/api/ajax-search?lang=${cultureKey}${getUrlString(data)}`;
-
-    searchResults.innerHTML = OnLoaded ? searchResults.innerHTML + smallPreloader
-                                : preloader;
-
-    // fetching data
-    fetch(url)
-        .then(response => response.json())
-        .then(items => {
-            if (!OnLoaded) {
-                searchResults.style.display = 'none';
-                searchResults.innerHTML = '';
-            }
-
-            document.querySelectorAll('#smallLoader, #loader').forEach(node => 
-                node.parentElement.removeChild(node));
-
-            document.querySelector('.back').setAttribute('data-id', 1220);
-            document.querySelector('.back').setAttribute('data-search-id', 1220);
-
-            let container = searchResults.querySelector('.category-list');
-
-            if (!OnLoaded) {
-                container = document.createElement('div');
-                container.className = 'category-list';
-                searchResults.appendChild(container);
-            }
-
-            for (const item of items) {
-
-                let obj = buildDOMObj(item); // =============================
-
-                let firstRepeatable = `<a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
-                                title="${item.pagetitle}" 
-                                style="background-image: url(${item.square_img}?${randomHash});" 
-                                class="object" data-id="${item.id}">
-                                ${($.cookie('object_' + item.id) ? 
-                                    (obj[item.typeRealEstate] ? obj[item.typeRealEstate].divRent : '')
-                                    : '<div class="new"></div>')}
-                                <div class="object-id">Id: ${item.id}</div> 
-                                <p>${item.pagetitle}</p>`,
-                    secondRepeatable = `</a>
-                            <div class="object-description">
-                                <p class="card-object-location"><i></i>${item.districtTitle}</p>
-                                <p class="card-object-category"><i></i>${item.categoryTitle}</p>
-                                ${(item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>')}
-                                <p class="card-area">${item.area} <span>sq. m.</span></p>`;
-                
-                let categorySvgBorder = 
-                    `<svg version="1.1" 
-                        id="Layer_2" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 60 60" 
-                        style="enable-background:new 0 0 60 60; fill:rgba(255,222,0, 1);" 
-                        xml:space="preserve">
-                            <polyline class="st0" points="30,30 5.8,30 5.8,5.7 54.2,5.7 54.2,54.3 5.8,54.3 "></polyline>
-                            <g>
-                                <path class="st1" d="M30,59.8C13.5,59.8,0.2,46.5,0.2,30S13.5,0.3,30,0.3S59.8,13.6,59.8,30S46.4,59.8,30,59.8z M30,2.3C14.6,2.3,2.2,14.7,2.2,30c0,15.3,12.5,27.8,27.8,27.8S57.8,45.4,57.8,30C57.8,14.7,45.3,2.3,30,2.3z"></path>
-                            </g>
-                            <g>
-                                <path class="st1" d="M30,58.8H1.2V30c0,0-0.4,11.7,8.3,20.3S30,58.8,30,58.8z"></path>
-                                <path class="st1" d="M30,59.8H0.2V30.6c0-0.3,0-0.5,0-0.6l2,0v0.4c0,1.9,0.6,11.8,8,19.2c8.3,8.2,19.6,8.3,19.8,8.3V59.8zM2.2,57.8h17.6c-3.5-1.3-7.5-3.4-11-6.8c-3.3-3.3-5.4-6.9-6.6-10.3V57.8z"></path>
-                            </g>&nbsp;
-                     </svg>`;
-
-                container.innerHTML += item.template == 4 ?
-                    `<div class="sisea-result slide offset ${item.catClass}">
-                        <a data-id="${item.id}" data-search-id="${item.id}-${item.alias}" 
-                        title="${item.pagetitle}" class="search-category" 
-                        style="background-image: url(${item.image}?${randomHash});">
-                            <p><i class="category-icon" 
-                                style="background-image: url(/${item.icon});">
-                            </i>${categorySvgBorder + item.longtitle}
-                            </p>
-                        </a>
-                    </div>`
-
-                    : categoryId == '35-real-estate' ? 
-                        `<div class="sisea-result estate offset">
-                            ${firstRepeatable}
-                            ${secondRepeatable}
-
-                                <p class="object-sea-view">${(item.seaView == 'true' ? 'Sea view' : '')}</p>
-                                ${(item.pool == 0 ? '' : '<p class="card-pool">' + 
-                                    (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>')}
-                                ${item.sold == 'true' ? '<p class="object-price">Sold</p>' 
-                                    : (obj[item.typeRealEstate] ? obj[item.typeRealEstate].pPrice : '')}
-                            </div>
-                            <div class="contact-object-btn">
-                                <img src="/assets/images/object_contact_icon.svg"/>
-                                <span>${translation.Contact(cultureKey)}</span>
-                            </div>
-                            <div class="favorite-object-btn">
-                                <img src="/assets/images/favorites_icon.svg"/>
-                                <span>${translation.Favorites(cultureKey)}</span>
-                            </div>
-                        </div>`
-                    
-                    : (obj[item.typeRealEstate]) ?
-                        `<div class="sisea-result estate search offset">
-                            ${firstRepeatable}
-                                ${(item.sold == 'true' ? '<div class="sold"></div>' : '')}
-                            ${secondRepeatable}
-                                ${item.sold == 'true' ? '<p class="object-price">Sold</p>' 
-                                    : (obj[item.typeRealEstate] ? obj[item.typeRealEstate].pPrice : '')}
-                            </div>
-                        </div>`
-                    
-                    : `<div class="sisea-result slide offset">
-                            <a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
-                            title="${item.pagetitle}" 
-                            style="background-image: url(${item.img}?${randomHash});" 
-                            class="object" data-id="${item.id}">
-                                    ${($.cookie('object_' + item.id) ? '' : '<div class="new"></div>')}
-                                    <p>
-                                        <span class="title-district">${item.districtTitle}</span> 
-                                        ${item.pagetitle + (item.longtitletwo.length > 3 ? '<br>' + item.longtitletwo : '')}
-                                    </p>
-                            </a>
-                        </div>`;
-            }
-
-            isLoaded = items.length >= 10 ? true : false;
-
-            // searchResults.fadeIn('500');
-            searchResults.style.display = '';
-            
-        })
-}
-
-//Ajax загрузка панораммы на сайт
-function getPano(itemId) {
-    panoIsLoad = false;
-    
-    clearTimeout(videoTimeOut);
-    
-    // $('#day-night-btn div').remove().hide();
-    document.querySelectorAll('#day-night-btn div, #video-object-btn div, #about-object-btn div, .sample-info').forEach(node => 
-        node.remove());
-    // node doesn't exist:
-    // document.querySelector('#day-night-btn div').style.display = 'none';
-    
-    let [panoContainer, videoContainer, panoLocation] = 
-        document.querySelectorAll('#tourDIV, .video-modal-content, #panoLocation');
-    
-    let cultureKey = getUrlVars()["lang"] || 'en';
-    let data = {
-        cultureKey: cultureKey,
-        itemId: itemId,
-        rand: getRandom()
-    }
-
-    let url = `https://thai360.info/api/get-object?lang=${cultureKey}${getUrlString(data)}`;
-
-    // fetching data
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            panoVrXml = data.panoUrl + 'indexdata/index_vr.xml';
-            panoXml = data.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
-
-            var player = document.querySelector('.audio-player .play-list'),
-                audioLink = data.audioLink,
-                mainPanoLink = parseInt(data.mainPanoLink) == 0 ? data.mainPanoLink : data.mainPanoLink + '&lang=' + cultureKey;
-                
-            document.getElementById('search-panel').setAttribute('data-place-id', data.placeId);
-            
-            if (audioLink != musicLink){
-                musicLink = audioLink;
-                player.innerHTML = '';
-                data.audioFiles.split(',').forEach(item => {
-                    player.innerHTML += `<li data-link="${item}"></li>`;
-                });
-
-                let stopPlay = document.getElementById('stop-play');
-                stopPlay.className += ' first-click';
-                if (stopPlay.classList.contains('active')) {
-                    // check for working
-                    stopPlay.click();
-                    setTimeout(() => stopPlay.click(), 2000);
-                }
-            }
-            if (data.published == 0)
-                window.location.hash = '#!p=26-phuket&s=pano12&lang=' + cultureKey;
-            else {
-                if (firstLoad || $.cookie('video_' + data.id) || parseInt(data.video) == 0) {}
-				else{
-					videoTimeOut = setTimeout(() => {
-                        document.getElementById('video-object-btn').innerHTML +=
-                            `<div class="animation-border"></div>
-                            <div class="animation-background"></div>
-                            <div class="btn-animation"></div>`;
-                    }, 10000);
-				}
-                if ((!firstLoad) && (!$.cookie('object_info'))) {
-                    document.getElementById('about-object-btn').innerHTML +=
-                        `<div class="animation-border"></div>
-                        <div class="animation-background"></div>
-                        <div class="btn-animation"></div>`
-                }
-                if (!$.cookie('day_night_' + itemId)) {
-                    document.getElementById('day-night-btn').innerHTML +=
-                        `<div class="animation-border"></div>
-                        <div class="animation-background"></div>
-                        <div class="btn-animation"></div>`;
-                }
-                if (!$.cookie('object_' + itemId)) {
-                    $.cookie('object_' + itemId, true, {
-                        expires: 300,
-                        path: '/'
-                    });
-                }
-                document.querySelectorAll('.search-logo, .logo').forEach(node => {
-                    node.setAttribute('href', `${data.parentPoint}&lang=${cultureKey}`);
-                })
-                // check this for quselectoring
-                document.querySelectorAll("meta[name='description'], meta[property='og:description']").forEach(node => 
-                    node.setAttribute('content', data.description));
-                document.querySelector("meta[name='keywords']").setAttribute('content', data.keywords);
-                document.querySelectorAll("meta[property='og:image'], meta[property='og:image:secure_url'], meta[name='twitter:image']")
-                    .forEach(node => 
-                        node.setAttribute('content', data.image));
-                document.querySelector("link[rel='image_src']").setAttribute('href', data.image);
-                document.querySelector("link[rel='alternate']").setAttribute('hreflang', cultureKey);
-                document.querySelector("link[rel='alternate']").setAttribute('href', window.location.href);
-                document.querySelector("meta[property='og:url']").setAttribute('content', window.location.href);
-                document.getElementById('home-btn').setAttribute('data-link', mainPanoLink);
-
-                isVRModeRequested() ? accessWebVr() 
-                    : firstLoad ? accessStdVr() 
-                        : OnLoadPano(panoXml, getUrlVars()["s"]);
-                
-                // port this in future..
-                let videoObjBtn = document.getElementById('video-object-btn');
-                
-                // if ((data.video != null || data.video != '' || data.video != undefined) && data.video)
-                data.video ? videoObjBtn.setAttribute('data-code', data.video) : 
-                    videoObjBtn.setAttribute('data-code', 0);
-
-
-                let or = data.template == 3;
-
-                let str = or ? `${data.longtitle}-${siteName}` : data.seoTitle;
-                
-                document.title = str; // true?
-                
-                document.querySelectorAll("meta[name='title'], meta[property='og:title']").forEach(node =>
-                    node.setAttribute('content', str));
-
-                panoLocation.innerHTML = or ?
-                     `${translation.Thailand(cultureKey)}<br><span>${data.title}</span>` :
-                     `${translation.Thailand(cultureKey)}<br><span>${data.location}<br>
-                        ${data.longtitle + (data.isRealEstate == true ? ' ID: ' + data.id : '')}</span>`;
-
-                if (data.isSample)
-                    document.getElementById('tourDIV').innerHTML += 
-                        '<div class="sample-info">' + translation.Sample_Tour(cultureKey) + '</div>'
-            }
-
-        })
-        .then(() => {
-            panoIsLoad = true;
-            
-            if(!firstLoad){
-                // ga - NOT DEFINED
-                ga('create', 'UA-90941148-2', 'auto', 'myAnalytics');
-                ga('myAnalytics.send', 'pageview', location.pathname + location.search + location.hash);
-                ga('myAnalytics.remove');
-
-                if(parseInt(itemId) == 26 && isMobile.AndroidApp()){
-                    setTimeout(() => {
-                        var krpano = document.getElementById("krpanoSWFObject");
-                        krpano.set('hotspot[spotpoint1590].visible', false);
-                        krpano.set('hotspot[spotpoint1593].visible', false);
-                        krpano.set('hotspot[spotpoint1594].visible', false);
-                    }, 500);
-                }
-            } else firstLoad = false;
-            
-            // NOT DEFINED
-            fbq('track', 'PageView');
-            fbq('track','ViewContent',{value:3.50, currency:'USD', content_name: $('title').text()});
-        })
-}
 
 //Ajax загрузка случайной панорамы по id категории
 function getPanoByCategoryId(itemId) {
@@ -1604,7 +1749,10 @@ function GetExludeObjects(forSearch) {
 
 
 
-// --- my functions ---
+
+
+// --- additional functions ---
+
 function getElAttr(el, attr) {
     return document.querySelector(el).getAttribute(attr);
 }
@@ -1636,12 +1784,12 @@ function buildDOMObj(item) {
         3: {
             divRent: '<div class="sale-rent"></div>',
             pPrice: `<p class="second-object-price"><i>Rent: </i>
-                            ${priceToString(item.priceRentMonthly)} 
-                            <b>${getPricesAndSymbol()}</b>
+                        ${priceToString(item.priceRentMonthly)} 
+                        <b>${getPricesAndSymbol()}</b>
                      </p>
                      <p class="object-price"><i>Sale: </i>
-                            ${priceToString(item.priceSale)} 
-                            <b>${getPricesAndSymbol()}</b>
+                        ${priceToString(item.priceSale)} 
+                        <b>${getPricesAndSymbol()}</b>
                      </p>`
         }
     }
