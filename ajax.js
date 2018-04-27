@@ -13,7 +13,7 @@ function GetParentCategories() {
 
     let searchResults = document.querySelector('#main-categories .category-list'),
         cultureKey = getUrlVars()["lang"] || 'en',
-        url = `https://thai360.info/api/get-parent-categories?lang=${cultureKey}&rand=${getRandom()}`;
+        url = `https://thai.hub360.info/api/get-parent-categories?lang=${cultureKey}&rand=${getRandom()}`;
 
     searchResults.innerHTML = preloader;
 
@@ -87,7 +87,7 @@ function GetFilterMap() {
         rand: getRandom()
     };
 
-    let url = `https://thai360.info/api/get-filter-map?lang=${cultureKey}${getUrlString(data)}`;
+    let url = `https://thai.hub360.info/api/get-filter-map?lang=${cultureKey}${getUrlString(data)}`;
 
     // getting data
     fetch(url)
@@ -137,7 +137,7 @@ function GetTopObjects() {
     let searchResults = document.querySelector('.site-search-results .search-content'),
         cultureKey = getUrlVars()['lang'] || 'en';
     
-    let url = `https://thai360.info/api/get-top-objects?lang=${cultureKey}&rand=${getRandom()}`;
+    let url = `https://thai.hub360.info/api/get-top-objects?lang=${cultureKey}&rand=${getRandom()}`;
 
     searchResults.innerHTML = preloader;
     
@@ -277,7 +277,7 @@ function OnFilterSearch() {
         rand: getRandom()
     }
 
-    let url = `https://thai360.info/api/get-real-estate-objects?lang=${cultureKey}${getUrlString(data)}`;
+    let url = `https://thai.hub360.info/api/get-real-estate-objects?lang=${cultureKey}${getUrlString(data)}`;
 
     searchResults.innerHTML = preloader;
 
@@ -469,7 +469,7 @@ function GetHotRealEstates() {
         rand: getRandom()
     };
 
-    let url = `https://thai360.info/api/get-hots-real-estates?lang=${cultureKey}${getUrlString(data)}`
+    let url = `https://thai.hub360.info/api/get-hots-real-estates?lang=${cultureKey}${getUrlString(data)}`
 
     searchResults.innerHTML = preloader;    
 
@@ -515,7 +515,7 @@ function GetHotRealEstates() {
             let container = document.createElement('div');
             container.className = 'category-list';
             container.innerHTML = data.hots.reduce((acc, item) => {
-                let obj = buildDOMObj(item);
+                let obj = buildDOMObj(item, {'cultureKey': cultureKey});
 
                 $.cookie('object_' + item.itemId, true, {
                     expires: 300,
@@ -584,7 +584,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
         rand: getRandom()
     }
 
-    let url = `https://thai360.info/api/ajax-search?lang=${cultureKey}${getUrlString(data)}`;
+    let url = `https://thai.hub360.info/api/ajax-search?lang=${cultureKey}${getUrlString(data)}`;
 
     searchResults.innerHTML = OnLoaded ? searchResults.innerHTML + smallPreloader
                                 : preloader;
@@ -614,7 +614,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
 
             for (const item of items) {
 
-                let obj = buildDOMObj(item); // =============================
+                let obj = buildDOMObj(item, {'cultureKey': cultureKey}); // =============================
 
                 let firstRepeatable = `<a href="#!p=${item.id}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" 
                                 title="${item.pagetitle}" 
@@ -737,7 +737,7 @@ function getPano(itemId) {
         rand: getRandom()
     }
 
-    let url = `https://thai360.info/api/get-object?lang=${cultureKey}${getUrlString(data)}`;
+    let url = `https://thai.hub360.info/api/get-object?lang=${cultureKey}${getUrlString(data)}`;
 
     // fetching data
     fetch(url)
@@ -886,8 +886,8 @@ function OnCategorySearch(category, categoryId, isFolder, title) {
             pagetitle: title,
             rand: getRandom()
         }
-        let url = (!isFolder) ? `https://thai360.info/api/objects?lang=${cultureKey}${getUrlString(data)}`
-            : `https://thai360.info/api/categories?lang=${cultureKey}${getUrlString(data)}`
+        let url = (!isFolder) ? `https://thai.hub360.info/api/objects?lang=${cultureKey}${getUrlString(data)}`
+            : `https://thai.hub360.info/api/categories?lang=${cultureKey}${getUrlString(data)}`
 
 
         searchResults.innerHTML = preloader;
@@ -1038,13 +1038,13 @@ function OnLoadObjects(category, offset) {
 
     if (category == 35) {
         if (isFilter) {
-            url = 'https://thai360.info/api/get-real-estate-objects';
+            url = 'https://thai.hub360.info/api/get-real-estate-objects';
             offset = 0;
             exclude = GetExludeObjects(false);
-        } else url = 'https://thai360.info/api/get-all-real-estates';
+        } else url = 'https://thai.hub360.info/api/get-all-real-estates';
     }
     if (category == 0) {
-        url = 'https://thai360.info/api/get-top-objects';
+        url = 'https://thai.hub360.info/api/get-top-objects';
         offset = 10;
         exclude = GetExludeObjects(false);
     }
@@ -1062,7 +1062,7 @@ function OnLoadObjects(category, offset) {
         exclude: exclude,
         rand: getRandom()
     }
-    let url = `https://thai360.info/api/loading-objects?lang=${cultureKey}${getUrlString(data)}`;
+    let url = `https://thai.hub360.info/api/loading-objects?lang=${cultureKey}${getUrlString(data)}`;
     
     fetch(url)
     .then(response => response.json())
@@ -1075,13 +1075,13 @@ function OnLoadObjects(category, offset) {
                 if (type == 1) {
                     for (const item of items) {
                         let [a, b] = [parseInt(item.priceRentDaily), parseInt(item.priceRentMonthly)];
-                        let obj = buildDOMObj(item);
+                        let obj = buildDOMObj(item, {'cultureKey': cultureKey});
                         console.log(obj);
 
                         if (rentType == 1 && categoryId != '327-land') {
                             if (a >= priceNowMin && a <= priceNowMax && a != 0 && (districts == 0 || districts.indexOf(item.district) >= 0)) {
 
-                                searchResults.innerHTML += getInnerHTML(buildDOMObj(item), [
+                                searchResults.innerHTML += getInnerHTML(buildDOMObj(item, {'cultureKey': cultureKey}), [
                                     ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + 
                                         (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>'),
         
@@ -1104,7 +1104,7 @@ function OnLoadObjects(category, offset) {
                             }
                         } else if (b >= priceNowMin && b <= priceNowMax && b != 0 && (districts == 0 || districts.indexOf(item.district) >= 0)) {
 
-                            searchResults.innerHTML += getInnerHTML(buildDOMObj(item), [
+                            searchResults.innerHTML += getInnerHTML(buildDOMObj(item, {'cultureKey': cultureKey}), [
                                 ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + 
                                     (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>'),
 
@@ -1130,7 +1130,7 @@ function OnLoadObjects(category, offset) {
                         let a = parseInt(item.priceSale);
 
                         if (a >= priceNowMin && a <= priceNowMax && (districts == 0 || districts.indexOf(item.district) >= 0)) {
-                            searchResults.innerHTML += getInnerHTML(buildDOMObj(item), [
+                            searchResults.innerHTML += getInnerHTML(buildDOMObj(item, {'cultureKey': cultureKey}), [
                                 ($.cookie('object_' + item.itemId) ? (item.type == 2 ? '<div class="sale"></div>' : '') + 
                                     (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>'),
 
@@ -1151,7 +1151,7 @@ function OnLoadObjects(category, offset) {
                 }
             } else {
                 for (const item of items) {
-                    searchResults.innerHTML += getInnerHTML(buildDOMObj(item), [
+                    searchResults.innerHTML += getInnerHTML(buildDOMObj(item, {'cultureKey': cultureKey}), [
                         ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + 
                             (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') 
                                 : '<div class="new"></div>'),
@@ -1159,82 +1159,67 @@ function OnLoadObjects(category, offset) {
                         (item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>'),
 
                         (item.sold == 'true' ? '<p class="object-price">Sold<p>' 
-                            : (item.type == 1 ? `<p class="object-price">
-                                    ${priceToString(item.priceRentMonthly)}
-                                    <b>${getPricesAndSymbol()}</b><text> monthly+</text>
-                                </p>` : 
-                                (item.type == 2 ? `<p class="object-price">
-                                        ${priceToString(item.priceSale)}<b>${getPricesAndSymbol()} + '</b>' + '</p>' : (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : ''))))
-                    ])
+                            : (obj[item.type] ? obj[item.type].pPrice : ''))
+                    ]);
+
+                    $.cookie('object_' + item.itemId, true, {
+                        expires: 300,
+                        path: '/'
+                    });
                 }
             }
+        } else if (offset >= 10) {
+            for (const item of items) {
+                let obj = buildDOMObj(item, {'cultureKey': cultureKey});
+                
+                if (obj[item.type]) {
+                    searchResults.innerHTML += obj.reusable.link + 
+                        `${($.cookie('object_' + item.itemId) ? (obj[item.type] ? obj[item.type].divRent : '') : '<div class="new"></div>')}
+                            <div class="object-id">Id: ${item.itemId}</div>
+                            <p>${item.title}</p>
+                            ${(item.sold == 'true' ? '<div class="sold"></div>' : '')}
+                        </a>
+                        <div class="object-description">
+                            <p class="card-object-location"><i></i>${item.location}</p>
+                            <p class="card-object-category"><i></i>${item.category}</p>
+                            ${(item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>')}
+                            <p class="card-area">${item.area} <span>sq. m.</span></p>
+                            ${(item.sold == 'true' ? '<p class="object-price">Sold</p>' 
+                                : (obj[item.type] ? obj[item.type].pPrice : ''))}
+                        </div>
+                    </div>`
+                } else {
+                    searchResults.innerHTML += `<div class="sisea-result slide offset">
+                            <a ${(item.objectLink.length < 10 ? `href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}"` 
+                                : 'href="' + item.objectLink + '" target="_blank"')} 
+                                title="${item.title}" style="background-image: url(${item.image});" class="object" data-id="${item.itemId}">
+                                    ${($.cookie('object_' + item.itemId) ? 
+                                        (obj[item.type] ? obj[item.type].divRent : '') 
+                                            : '<div class="new"></div>') + 
+                                    (item.type == 3 || item.type == 2 || item.type == 1 ? `<p>${item.titleWithCategory}</p>` 
+                                        : (category == 0 ? '<p class="big-title">' + item.titleWithLocation + '</p>' 
+                                            : '<p>' + item.titleWithLocation + '</p>')) + 
+                                    (item.sold == 'true' ? '<div class="sold"></div>' : '')}
+                            </a>
+                            ${(item.video != '0' ? '<button class="youtube-btn" data-code="' + item.video + '"></button>' : '')}
+                        </div>`;
+                }
+
+                $.cookie('object_' + item.itemId, true, {
+                    expires: 300,
+                    path: '/'
+                });
+            }
         }
+
+        isLoaded = items.length >= 1;
+        searchResults.getElementsByTagName('svg')[0].remove(); // check
 
         function getInnerHTML (obj, arr) {
             return obj.link + arr[0] + obj.info + arr[1] + obj.addInfo + arr[2] + obj.contact;
         }
         
-    })
-    
-    $.ajax({
-        beforeSend: function() {
-            searchResults.append(smallPreloader);
-        },
-        success: function(data) {
-            var items = data.items;
-            var count = 0;
-            var priceNowMin = $("#slider-range").slider("values", 0);
-            var priceNowMax = $("#slider-range").slider("values", 1);
-            if (category == 35) {
-                if (isFilter) {
-                    if (type == 1) {
-                    } else {}
-                } else {
-                    for (key in items) {
-                        var item = items[key];
-                        searchResults.append('
-															' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>')
-                                                            ' + (item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>') 
-                                                            + (item.sold == 'true' ? '<p class="object-price">Sold<p>' : (item.type == 1 ? '<p class="object-price">' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '<text> monthly+</text></p>' : (item.type == 2 ? '<p class="object-price">' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : ''))))
-															<div class="contact-object-btn"><img src="/assets/images/object_contact_icon.svg"/><span>' + translation.Contact(cultureKey) + '</span></div>\
-															<div class="favorite-object-btn"><img src="/assets/images/favorites_icon.svg"/><span>' + translation.Favorites(cultureKey) + '</span></div>\
-									</div>');
-                        $.cookie('object_' + item.itemId, true, {
-                            expires: 300,
-                            path: '/'
-                        });
-                    };
-                }
-            } else {
-                if (offset >= 10) {
-                    for (key in items) {
-                        var item = items[key];
-                        if (item.type == 1 || item.type == 2 || item.type == 3) {
-                            searchResults.append('<div class="sisea-result estate search offset">\
-											<a href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '" title="' + item.title + '" style="background-image: url(' + item.squareImg + '?' + randomHash + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + '<div class="object-id">Id: ' + item.itemId + '</div> <p>' + item.title + '</p>' + (item.sold == 'true' ? '<div class="sold"></div>' : '') + '</a>\
-											<div class="object-description">\
-											<p class="card-object-location"><i></i>' + item.location + '</p>\
-											<p class="card-object-category"><i></i>' + item.category + '</p>' + (item.categoryId == '327-land' ? '' : '<p class="card-bedrooms">' + item.bedrooms + '<i></i></p>') + '<p class="card-area">' + item.area + ' <span>sq. m.</span></p>' + (item.sold == 'true' ? '<p class="object-price">Sold</p>' : (item.type == 1 ? '<p class="object-price">' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '<text> monthly+</text></p>' : (item.type == 2 ? '<p class="object-price">' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : (item.type == 3 ? '<p class="second-object-price"><i>Rent: </i>' + priceToString(item.priceRentMonthly) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p><p class="object-price"><i>Sale: </i>' + priceToString(item.priceSale) + ' ' + '<b>' + getPricesAndSymbol() + '</b>' + '</p>' : '')))) + '</div>\
-									</div>');
-                        } else {
-                            searchResults.append('<div class="sisea-result slide offset">\
-											<a ' + (item.objectLink.length < 10 ? 'href="#!p=' + item.itemId + '-' + item.alias + '&s=pano' + item.panoId + '&lang=' + cultureKey + '"' : 'href="' + item.objectLink + '" target="_blank"') + ' title="' + item.title + '" style="background-image: url(' + item.image + ');" class="object" data-id="' + item.itemId + '">' + ($.cookie('object_' + item.itemId) ? (item.type == 1 ? '<div class="rent"></div>' : '') + (item.type == 2 ? '<div class="sale"></div>' : '') + (item.type == 3 ? '<div class="sale-rent"></div>' : '') : '<div class="new"></div>') + (item.type == 3 || item.type == 2 || item.type == 1 ? '<p>' + item.titleWithCategory + '</p>' : (category == 0 ? '<p class="big-title">' + item.titleWithLocation + '</p>' : '<p>' + item.titleWithLocation + '</p>')) + (item.sold == 'true' ? '<div class="sold"></div>' : '') + '</a>' + (item.video != '0' ? '<button class="youtube-btn" data-code="' + item.video + '"></button>' : '') + '</div>');
-                        }
-                        $.cookie('object_' + item.itemId, true, {
-                            expires: 300,
-                            path: '/'
-                        });
-                    };
-                }
-            }
-			if (items.length >= 1) {
-                isLoaded = true;
-            } else {
-                isLoaded = false;
-            }
-            searchResults.find('svg').remove();
-        }
-    });
+    })   
 }
 
 
@@ -1254,7 +1239,7 @@ function getPanoByCategoryId(itemId) {
 		cultureKey = 'en';
 	}
     $.ajax({
-        url: 'https://thai360.info/api/get-object-by-category',
+        url: 'https://thai.hub360.info/api/get-object-by-category',
         data: {
             itemId: itemId,
             lang: cultureKey,
@@ -1316,32 +1301,33 @@ function getPanoByCategoryId(itemId) {
                 }
                 $('.search-logo, .logo').attr('href', item.parentPoint + '&lang=' + cultureKey);
                 $('title').text(data.title + ' - ' + siteName);
+
                 $("meta[name='title']").attr('content', data.title + ' - ' + siteName);
-                $("meta[name='description']").attr('content', data.description);
-                $("meta[name='keywords']").attr('content', data.keywords);
                 $("meta[property='og:title']").attr('content', data.title + ' - ' + siteName);
+                
+                $("meta[name='description']").attr('content', data.description);
                 $("meta[property='og:description']").attr('content', data.description);
+                
                 $("meta[property='og:image']").attr('content', data.image);
-                $("link[rel='image_src']").attr('href', data.image);
-                $("link[rel='alternate']").attr('hreflang', cultureKey).attr('href', window.location.href);
                 $("meta[property='og:image:secure_url']").attr('content', data.image);
                 $("meta[name='twitter:image']").attr('content', data.image);
+                
+                $("link[rel='image_src']").attr('href', data.image);
+                $("link[rel='alternate']").attr('hreflang', cultureKey).attr('href', window.location.href);
                 $("meta[property='og:url']").attr('content', window.location.href);
-        				$('#home-btn').attr('data-link', mainPanoLink);
-                if (isVRModeRequested()) {
-                    accessWebVr();
-                } else {
-                    accessStdVr();
-                }
-                if ((item.video != null || item.video != '' || item.video != undefined) && item.video) {
-                    $('#video-object-btn').attr('data-code', item.video);
-                } else {
-                    $('#video-object-btn').attr('data-code', 0);
-                }
+                $("meta[name='keywords']").attr('content', data.keywords);
+                $('#home-btn').attr('data-link', mainPanoLink);
+                
+                isVRModeRequested() ? accessWebVr() : accessStdVr();
+
+                $('#video-object-btn').attr('data-code', item.video || 0); // check
+
                 if (data.template == 3) {
                     panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + item.title + '</span>');
                 } else {
-                    panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + item.location + '<br>' + item.longtitle + (item.isRealEstate == true ? ' ID: ' + item.id : '') + '</span>');
+                    panoLocation.empty().html(`${translation.Thailand(cultureKey)}<br><span>
+                                ${item.location}<br>${item.longtitle + (item.isRealEstate == true ? ' ID: ' + item.id : '')}
+                            </span>`);
                 }
             }
             OnCategorySearch(categoryId, itemId, isFolder, '');
@@ -1374,7 +1360,7 @@ function getAboutInfo(isContacts) {
         $('.about-modal-window').dequeue();
     });
     $.ajax({
-        url: 'https://thai360.info/api/get-about-info',
+        url: 'https://thai.hub360.info/api/get-about-info',
         data: {
             lang: cultureKey,
 			rand: getRandom()
@@ -1438,7 +1424,7 @@ function OnLoadNews(offset) {
 		cultureKey = 'en';
 	}
     $.ajax({
-        url: 'https://thai360.info/api/loading-news',
+        url: 'https://thai.hub360.info/api/loading-news',
         data: {
             lang: cultureKey,
             offset: offset,
@@ -1496,7 +1482,7 @@ function getAboutObjectInfo(showFeedBack){
     $('.about-object-modal').queue(function() {
 		$('.about-object-modal').animate({right: 0}, 500);
 		$.ajax({
-        url: 'https://thai360.info/api/get-about-object-info',
+        url: 'https://thai.hub360.info/api/get-about-object-info',
         data: {
             itemId: panoId,
             lang: cultureKey,
@@ -1664,7 +1650,7 @@ function getInnerContent() {
         right: 0
     }, 500);
     $.ajax({
-        url: 'https://thai360.info/api/get-default-object',
+        url: 'https://thai.hub360.info/api/get-default-object',
         data: {
             itemId: itemId,
             lang: cultureKey,
@@ -1696,7 +1682,7 @@ function getHelpInfo(dataId) {
         left: 0
     }, 500);
     $.ajax({
-        url: 'https://thai360.info/api/get-default-object',
+        url: 'https://thai.hub360.info/api/get-default-object',
         data: {
             itemId: dataId,
             lang: cultureKey,
@@ -1834,7 +1820,7 @@ function setAttributes(el, attrs) {
 }
 
 // HTML building function
-function buildDOMObj(item) {
+function buildDOMObj(item, obj) {
     return {
         1: {
             divRent: '<div class="rent"></div>',
@@ -1857,7 +1843,7 @@ function buildDOMObj(item) {
         },
         reusable: {
             link: `<div class="sisea-result estate offset">
-                <a href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${cultureKey}" title="${item.title}" 
+                <a href="#!p=${item.itemId}-${item.alias}&s=pano${item.panoId}&lang=${obj.cultureKey}" title="${item.title}" 
                     style="background-image: url(${item.squareImg}?${randomHash});" class="object" data-id="${item.itemId}">`,
             info: `<div class="object-id">Id: ${item.itemId}</div>
                     <p>${item.title}</p>
@@ -1871,10 +1857,10 @@ function buildDOMObj(item) {
                     ${(item.pool == 0 ? '' : '<p class="card-pool">' + (item.pool == 1 ? 'Private pool' : 'Community pool') + '</p>')}`,
             contact: `</div>
                     <div class="contact-object-btn">
-                        <img src="/assets/images/object_contact_icon.svg"/><span>${translation.Contact(cultureKey)}</span>
+                        <img src="/assets/images/object_contact_icon.svg"/><span>${translation.Contact(obj.cultureKey)}</span>
                     </div>
                     <div class="favorite-object-btn">
-                        <img src="/assets/images/favorites_icon.svg"/><span>${translation.Favorites(cultureKey)}</span>
+                        <img src="/assets/images/favorites_icon.svg"/><span>${translation.Favorites(obj.cultureKey)}</span>
                     </div>
                 </div>`
         }

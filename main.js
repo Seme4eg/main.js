@@ -92,10 +92,10 @@ document.addEventListener('DOMContentLoaded', function () {
             krpano.set('hotspot[spotpoint1594].visible', false);
         }, 500);
         
-    CSSLoad('https://thai360.info/assets/css/owl.carousel.css');
-    CSSLoad('https://thai360.info/assets/css/bootstrap.css');
-    CSSLoad('https://thai360.info/assets/css/jquery.scrollbar.css');
-    CSSLoad('https://thai360.info/assets/css/main.css?' + getRandom());
+    CSSLoad('https://thai.hub360.info/assets/css/owl.carousel.css');
+    CSSLoad('https://thai.hub360.info/assets/css/bootstrap.css');
+    CSSLoad('https://thai.hub360.info/assets/css/jquery.scrollbar.css');
+    CSSLoad('https://thai.hub360.info/assets/css/main.css?' + getRandom());
 
     //Получение переводов
     getBtnTranslations(cultureKey); // где definition этой ф-ии?
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (isMobile.any()) {
         $('.search-time').show();
-        $("body").append($('<link rel="stylesheet" href="https://thai360.info/assets/css/mobile_adaptation.css? ' + getRandom() + '" type="text/css" />'));
+        $("body").append($('<link rel="stylesheet" href="https://thai.hub360.info/assets/css/mobile_adaptation.css? ' + getRandom() + '" type="text/css" />'));
     }
 });
 

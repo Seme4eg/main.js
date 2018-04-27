@@ -567,7 +567,7 @@ function feedBackForm() {
         return false;
     } else {
         if (elem.value == this.defaultValue) this.value = "";
-        window.location.href = 'https://thai360.info/message-sent?redirect=' + oldHref;
+        window.location.href = 'https://thai.hub360.info/message-sent?redirect=' + oldHref;
     }
 }
 
