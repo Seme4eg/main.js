@@ -995,6 +995,117 @@ function OnCategorySearch(category, categoryId, isFolder, title) {
     }
 }
 
+//Ajax загрузка и открытие окна информации о компании
+function getAboutInfo(isContacts) {
+    // document.getElementById('info-btn').classList.remove('open'); // node does not exist
+    OnShowHideControls(true, false);
+    var cultureKey = getUrlVars()["lang"] || 'en';
+    
+    // animation
+    $('.about-modal-window').animate({
+        left: 0
+    }, 500);
+
+    // redact this
+    $('.about-modal-window').queue(function() {
+        $('.close-modal-btn').fadeIn(500);
+        $('.about-modal-window').dequeue();
+    });
+
+    // ---
+
+    document.querySelector('.about-content').innerHTML += preloader;
+
+    let url = `https://thai.hub360.info/api/get-about-info?lang=${cultureKey}&rand=${getRandom()}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let [pages, news, counter] = [data.pages, data.news, 1];
+
+            document.querySelector('.about-content svg').remove(); // check for existence
+
+            if (!isContacts) {
+                document.querySelector('.about-block.block-2 h3').setAttribute('data-count', data.newsCount);
+
+                for (const page of pages) {
+                    if (page.alias == 'project-news-i-updates') {
+                        document.querySelector(`.about-block.block-${counter} h3`).textContent = page.title;
+                        document.querySelector('.block-2 h3').innerHTML += 
+                            '<span class="prev-new" data-offset="-3"></span><span class="next-new" data-offset="3"></span>';
+
+                        document.querySelector('.block-2 .about-content-body').innerHTML += news.reduce((acc, itemNew) => {
+                            return acc += `<div class="item-new" data-id="${itemNew.itemId}">
+                                    <h4>${itemNew.title}</h4>
+                                    <div class="new-image" style="background-image: url(${itemNew.imageUrl});"></div>
+                                    <p>${itemNew.introtext}</p>
+                                </div>`
+                        }, '');
+                        
+                    } else {
+                        document.querySelector(`.about-block.block-${counter} h3`).textContent = page.title;
+                        document.querySelector(`.about-block.block-${counter} .about-content-body`).innerHTML = page.content;
+                        if (counter == 3)
+                            document.querySelector('.block-3 .about-content-body').innerHTML += 
+                                `<div id="ourLocation">
+                                    <iframe class="location-iframe" 
+                                        src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d505704.9120408311!2d98.332807!3d8.0175282!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x76a7f73bce63d3c0!2stest.thai360+Co.+LTD.!5e0!3m2!1sru!2s!4v1496828995883" 
+                                        frameborder="0" style="border:0">
+                                    </iframe>
+                                <div>`;
+                    }
+                    counter++;
+                }
+
+                document.querySelector('.about-content').innerHTML += data.privacyPolicy;
+                $('.about-content').fadeIn('500'); // animation
+                
+            } else {
+                document.getElementById('about-body').innerHTML += pages.reduce((acc, page) => {
+                    return page.alias !== 'we-are-located-at' ? acc : acc += `<div class="our-location">
+                            <h3>${page.title}</h3>
+                            <div class="about-content-body">${page.content}</div>
+                            <div id="ourLocation">
+                                <iframe class="location-iframe" 
+                                    src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d505704.9120408311!2d98.332807!3d8.0175282!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x76a7f73bce63d3c0!2stest.thai360+Co.+LTD.!5e0!3m2!1sru!2s!4v1496828995883" 
+                                    frameborder="0" style="border:0">
+                                </iframe>
+                            <div>
+                        </div>`;
+                })
+            }
+        })
+        .then(() => {
+            panoIsLoad = false;
+            loadMap = true;
+        })
+}
+
+
+// загрузка новостей объекта
+function OnLoadNews(offset) {
+    var cultureKey = getUrlVars()["lang"] || 'en';
+    let url = `https://thai.hub360.info/api/loading-news?lang=${cultureKey}&offset=${offset}&rand=${getRandom()}`
+
+    document.querySelector('.about-content').innerHTML += preloader;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('.about-block.block-2 .about-content-body').innerHTML = '';
+            document.querySelector('.about-content svg').remove();
+
+            for (const itemNew of data) {
+            	document.querySelector('.block-2 .about-content-body').innerHTML += `<div class="item-new" data-id="${itemNew.itemId}">
+                        <h4>${itemNew.title}</h4>
+                        <div class="new-image" style="background-image: url(${itemNew.imageUrl});"></div>
+                        <p>${itemNew.introtext}</p>
+                    </div>`;
+            }
+
+        })
+        .then(() => panoIsLoad = false);   
+}
 
 
 
@@ -1020,6 +1131,7 @@ function OnCategorySearch(category, categoryId, isFolder, title) {
 
 
 
+// ---------------------- ф-ю ниже я НЕ ТЕСТИРОВАЛ - не триггерится ------------------------
 
 //Ajax подгрузчик обектов(Изначально загружается 10 объектов при пролистывании запускается эта функция и подгружаются еще 10 объектов ну или сколько есть)
 function OnLoadObjects(category, offset) {
@@ -1344,295 +1456,180 @@ function getPanoByCategoryId(itemId) {
 		}
     });
 }
-//Ajax загрузка и открытие окна информации о компании
-function getAboutInfo(isContacts) {
-    $('#info-btn').removeClass('open');
-    OnShowHideControls(true, false);
-    var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    $('.about-modal-window').animate({
-        left: 0
-    }, 500);
-    $('.about-modal-window').queue(function() {
-        $('.close-modal-btn').fadeIn(500);
-        $('.about-modal-window').dequeue();
-    });
-    $.ajax({
-        url: 'https://thai.hub360.info/api/get-about-info',
-        data: {
-            lang: cultureKey,
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            $('.about-content').append(preloader);
-        },
-        success: function(data) {
-            var pages = data.pages;
-            var news = data.news;
-            var counter = 1;
-            $('.about-content svg').remove();
-            if (!isContacts) {
-                $('.about-block.block-2 h3').attr('data-count', data.newsCount)
-                for (key in pages) {
-                    var page = pages[key];
-                    if (page.alias == 'project-news-i-updates') {
-                        $('.about-block.block-' + counter + ' h3').text(page.title);
-                        $('.block-2 h3').append('<span class="prev-new" data-offset="-3"></span><span class="next-new" data-offset="3"></span>');
-                        for (key in news) {
-                            var itemNew = news[key];
-                            $('.block-2 .about-content-body').append('<div class="item-new" data-id="' + itemNew.itemId + '">\
-									<h4>' + itemNew.title + '</h4>\
-									<div class="new-image" style="background-image: url(' + itemNew.imageUrl + ');"></div>\
-									<p>' + itemNew.introtext + '</p>\
-								</div>');
-                        }
-                    } else {
-                        $('.about-block.block-' + counter + ' h3').text(page.title);
-                        $('.about-block.block-' + counter + ' .about-content-body').html(page.content);
-                        if (counter == 3) {
-                            $('.block-3 .about-content-body').append('<div id="ourLocation"><iframe class="location-iframe" src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d505704.9120408311!2d98.332807!3d8.0175282!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x76a7f73bce63d3c0!2stest.thai360+Co.+LTD.!5e0!3m2!1sru!2s!4v1496828995883" frameborder="0" style="border:0"></iframe><div>');
-                        }
-                    }
-                    counter++;
-                };
-                $('.about-content').append(data.privacyPolicy);
-                $('.about-content').fadeIn('500');
-            } else {
-                for (key in pages) {
-                    var page = pages[key];
-                    if (page.alias == 'we-are-located-at') {
-                        $('#about-body').append('<div class="our-location">\
-								<h3>' + page.title + '</h3>\
-								<div class="about-content-body">' + page.content + '</div>\
-								<div id="ourLocation"><iframe class="location-iframe" src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d505704.9120408311!2d98.332807!3d8.0175282!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x76a7f73bce63d3c0!2stest.thai360+Co.+LTD.!5e0!3m2!1sru!2s!4v1496828995883" frameborder="0" style="border:0"></iframe><div>\
-							</div>');
-                    }
-                }
-            }
-        }
-    }).done(function() {
-        panoIsLoad = false;
-        loadMap = true;
-    });
-}
-//Ajax загрузка новостей объекта
-function OnLoadNews(offset) {
-    var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    $.ajax({
-        url: 'https://thai.hub360.info/api/loading-news',
-        data: {
-            lang: cultureKey,
-            offset: offset,
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            $('.about-content').append(preloader);
-        },
-        success: function(data) {
-            $('.about-block.block-2 .about-content-body').empty();
-            $('.about-content svg').remove();
-            for (key in data) {
-                let itemNew = data[key];
-                $('.block-2 .about-content-body').append('<div class="item-new" data-id="' + itemNew.itemId + '">\
-							<h4>' + itemNew.title + '</h4>\
-							<div class="new-image" style="background-image: url(' + itemNew.imageUrl + ');"></div>\
-							<p>' + itemNew.introtext + '</p>\
-							</div>');
-            }
-        }
-    }).done( () => panoIsLoad = false );
-}
 
-//Ajax загрузка информации об объекте
+// загрузка информации об объекте
 function getAboutObjectInfo(showFeedBack){
+    console.log('running');
 	if (!$.cookie('object_info')) {
 		$.cookie('object_info', true, {
 				expires: 300,
 				path: '/'
 		});
-		$('#about-object-btn div').remove();
+		if (document.getElementById('about-object-btn div'))
+		    document.getElementById('about-object-btn div').remove();
     }
-    if($('#search-panel').hasClass('open')){
+    if(document.getElementById('search-panel').classList.contains('open'))
 		OnCloseSearchPanel(false);
-	}
-	if(showFeedBack){
+	if(showFeedBack)
 		ga('send', 'event', 'Button', 'Click', 'FeedBack Button Click');
-	}
-	else{
-		ga('send', 'event', 'Button', 'Click', 'Open Object Info');
-	}
-	$('.object-location').show();
+	else
+        ga('send', 'event', 'Button', 'Click', 'Open Object Info');
+        
+	document.querySelector('.object-location').style.display = '';
     OnShowHideControls(true, false);
-    var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    var aboutContent = $('.about-object-content');
-    var panoId = getUrlVars()["p"];
-    if (typeof panoId === 'undefined' || panoId === null) {
-        panoId = 1;
-    } else {
-        panoId = getUrlVars()["p"].split('-')[0];
-    }
-    $('.about-object-modal').queue(function() {
-		$('.about-object-modal').animate({right: 0}, 500);
-		$.ajax({
-        url: 'https://thai.hub360.info/api/get-about-object-info',
-        data: {
-            itemId: panoId,
-            lang: cultureKey,
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            $('#about-object-body').append(preloader);
-        },
-        success: function(data) {
-			$('#about-object-body #loader').remove();
-            var album = data.gallery;
-            var news = data.news;
-			var placeId = data.placeId;
-            var counter = 4;
-			if(data.type == 2){
-				$('#booking-block h3').text(translation.Get_Special_Offer(cultureKey));
-			}
-			else if(data.type == 1){
-				$('#booking-block h3').text(translation.Get_Personal_Offer(cultureKey));
-			}
-			else{
-				$('#booking-block h3').text(translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey));
-			}
-            $('#aboutObjectTitle').text(data.title);
-			if(!showFeedBack){
-				var bodyTitle = data.bodytitle;
-				if(bodyTitle){
-					$('.about-object-content .object-content').append('<h2>' + bodyTitle + '</h2>');
-				}
-			if(data.rent_table){
-				var lowSeason = data.low_season;
-				var highSeason = data.high_season;
-				var peakSeason = data.peak_season;
-				var longTermMin = parseInt(data.long_term_min);
-				$('.about-object-content .object-content').append('<table class="rent-table"><tbody>\
-					<tr>\
-						<td></td>\
-						<td>' + translation.Daily_Rent_Table(cultureKey) + '</td>\
-						<td>' + translation.Weekly_Rent_Table(cultureKey) + '</td>\
-						<td>' + translation.Monthly_Rent_Table(cultureKey) + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.Low_Season(cultureKey) + '<br /><small>' + getAllMonth(lowSeason, cultureKey).replace(', ', ' - ') + '</small></td>\
-						<td>' + (data.low_season_daily ? data.low_season_daily + ' ฿' : '') + '</td>\
-						<td>' + (data.low_season_weekly ? data.low_season_weekly + ' ฿' : '') + '</td>\
-						<td>' + (data.low_season_monthly ? data.low_season_monthly + ' ฿' : '') + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.High_Season(cultureKey) + '<br /><small>' + getAllMonth(highSeason, cultureKey) + '</small></td>\
-						<td>' + (data.high_season_daily ? data.high_season_daily + ' ฿' : '') + '</td>\
-						<td>' + (data.high_season_weekly ? data.high_season_weekly + ' ฿' : '') + '</td>\
-						<td>' + (data.high_season_monthly ? data.high_season_monthly + ' ฿' : '') + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.Peak_Season(cultureKey) + '<br /><small>' + getAllMonth(peakSeason, cultureKey) + '</small></td>\
-						<td>' + (data.peak_season_daily ? data.peak_season_daily + ' ฿' : '') + '</td>\
-						<td>' + (data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '') + '</td>\
-						<td>' + (data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '') + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.Long_Term(cultureKey) + '<br><small>' + translation.Get_Min_Rent(longTermMin, cultureKey) + '</small></td>\
-						<td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>\
-						<td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>\
-						<td>' + (data.long_term ? data.long_term + ' ฿' : '') + '</td>\
-					</tr>\
-					</tbody></table>');
-			}
-            $('.object-content').append(data.content).find('table').wrap('<div class="table-responsive"></div>');
-            $('.about-object-content svg').remove();
-            if (data.video == null || data.video == '' || data.video == undefined || parseInt(data.video) == 0) {} else {
-                $('.owl-main').append('<div class="gallery-item video-item" style="display: none;"><iframe src="https://www.youtube.com/embed/' + data.video + '" frameborder="0" style="border:0;"></iframe></div>');
-                $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item" style="background-image: url(https://img.youtube.com/vi/' + data.video + '/hqdefault.jpg);"></div></div>');
-            }
-            $('.owl-main').append('<a class="fancybox" data-fancybox="gallery" href="' + data.fullImage + '" title="' + data.title + '"><div class="gallery-item" style="background-image: url(' + data.image + ');display: none;"></div></a>');
-            $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item"  style="background-image: url(' + data.image + ');"></div></div>');
-            if (album) {
-                for (key in album) {
-                    var galleryItem = album[key];
-                    $('.owl-main').append('<a class="fancybox" data-fancybox="gallery" href="' + galleryItem.url + '" title="' + data.title + '"><div class="gallery-item" style="background-image: url(' + galleryItem.thumbUrl + ');display: none;"></div></a>');
-                    $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item" style="background-image: url(' + galleryItem.thumbUrl + ');"></div></div>');
-                };
-				$('.owl-navigation').append('<div class="owl-prev" id="owl-prev"></div><div class="owl-next" id="owl-next"></div>');
-            }
-            if (news.length >= 1 && !data.isCity) {
-                if (data.isFeedBack) {
-                    $('#gallery-block, #news-block, #booking-block').addClass('col-sm-4');
-					// if(data.special_offer){
-						// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
-					// }
-                    $('#booking-block').show();
-                } else {
-                    $('#gallery-block, #news-block').addClass('col-sm-6');
+    var cultureKey = getUrlVars()["lang"] || 'en';
+    var aboutContent = document.querySelector('.about-object-content');
+    var panoId = getUrlVars()["p"].split('-')[0] || 1;
+    console.log(panoId);
+    
+    $('.about-object-modal').animate({right: 0}, 500);
+
+    let url = `https://thai.hub360.info/api/get-about-object-info?lang=${cultureKey}&itemId=${panoId}&rand=${getRandom()}`;
+
+    document.getElementById('about-object-body').innerHTML += preloader;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (document.getElementById('about-object-body #loader'))
+                document.getElementById('about-object-body #loader').remove();
+
+            console.log(document.querySelector('booking-block h3'));
+            document.querySelector('#booking-block h3').textContent = 
+                data.type == 2 ? translation.Get_Special_Offer(cultureKey)
+                    : data.type == 1 ? translation.Get_Personal_Offer(cultureKey)
+                        : translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey);
+
+            document.getElementById('aboutObjectTitle').textContent = data.title;
+
+            if(!showFeedBack){
+                if(data.bodyTitle)
+                    document.querySelector('.about-object-content .object-content').innerHTML += '<h2>' + data.bodyTitle + '</h2>';
+                if(data.rent_table){
+                    document.querySelector('.about-object-content .object-content').innerHTML += `<table class="rent-table"><tbody>
+                        <tr>
+                            <td></td>
+                            <td>${translation.Daily_Rent_Table(cultureKey)}</td>
+                            <td>${translation.Weekly_Rent_Table(cultureKey)}</td>
+                            <td>${translation.Monthly_Rent_Table(cultureKey)}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.Low_Season(cultureKey)}<br/>
+                                <small>${getAllMonth(data.low_season, cultureKey).replace(', ', ' - ')}</small></td>
+                            <td>${(data.low_season_daily ? data.low_season_daily + ' ฿' : '')}</td>
+                            <td>${(data.low_season_weekly ? data.low_season_weekly + ' ฿' : '')}</td>
+                            <td>${(data.low_season_monthly ? data.low_season_monthly + ' ฿' : '')}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.High_Season(cultureKey)}<br />
+                                <small>${getAllMonth(data.high_season, cultureKey)}</small></td>
+                            <td>${(data.high_season_daily ? data.high_season_daily + ' ฿' : '')}</td>
+                            <td>${(data.high_season_weekly ? data.high_season_weekly + ' ฿' : '')}</td>
+                            <td>${(data.high_season_monthly ? data.high_season_monthly + ' ฿' : '')}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.Peak_Season(cultureKey)}<br />
+                                <small>${getAllMonth(data.peak_season, cultureKey)}</small></td>
+                            <td>${(data.peak_season_daily ? data.peak_season_daily + ' ฿' : '')}</td>
+                            <td>${(data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '')}</td>
+                            <td>${(data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '')}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.Long_Term(cultureKey)}<br>
+                                <small>${translation.Get_Min_Rent(parseInt(data.long_term_min), cultureKey)}</small></td>
+                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
+                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
+                            <td>${(data.long_term ? data.long_term + ' ฿' : '')}</td>
+                        </tr>
+                        </tbody></table>`;
                 }
-                $('#news-block').empty().append('<h3>' + translation.Object_News_Title(cultureKey) + '</h3>');
-                for (key in news) {
-                    var itemNew = news[key];
-                    $('#news-block').append('<div class="item-new" data-id="' + itemNew.itemId + '">\
-								<h4>' + itemNew.title + '</h4>\
-								<img src="' + itemNew.imageUrl + '" />\
-								<p>' + itemNew.introtext + '</p>\
-							</div>');
+
+                console.log(data);
+                document.querySelector('.object-content').innerHTML += data.content;
+                console.log(document.querySelector('.object-content'));
+                let temp = document.querySelector('.object-content table').parentElement;
+                console.log(temp);
+                temp.innerHTML = '<div class="table-responsive">' + temp.innerHTML + '</div>';
+                console.log(document.querySelector('.object-content'));
+                
+                document.querySelector('.about-object-content svg').remove();
+
+                if (data.video) {
+                    document.querySelector('.owl-main').innerHTML += `<div class="gallery-item video-item" style="display: none;">
+                            <iframe src="https://www.youtube.com/embed/${data.video}" frameborder="0" style="border:0;"></iframe></div>`;
+                    document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
+                            <div class="gallery-item" style="background-image: url(https://img.youtube.com/vi/${data.video}/hqdefault.jpg);"></div>
+                        </div>`;
+                }
+                document.querySelector('.owl-main').innerHTML += `<a class="fancybox" data-fancybox="gallery" 
+                        href="${data.fullImage}" title="${data.title}">
+                            <div class="gallery-item" style="background-image: url(${data.image});display: none;"></div>
+                    </a>`;
+                document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
+                        <div class="gallery-item" style="background-image: url(${data.image});"></div></div>`;
+
+                if (data.gallery) {
+                    for (const galleryItem of data.gallery) {
+                        document.querySelector('.owl-main').innerHTML += `<a class="fancybox" data-fancybox="gallery" 
+                                href="${galleryItem.url}" title="${data.title}">
+                                    <div class="gallery-item" style="background-image: url(${galleryItem.thumbUrl});display: none;"></div>
+                            </a>`;
+                        document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
+                                <div class="gallery-item" style="background-image: url(${galleryItem.thumbUrl});"></div></div>`;
+                    };
+                    document.querySelector('.owl-navigation').innerHTML += `<div class="owl-prev" id="owl-prev">
+                            </div><div class="owl-next" id="owl-next"></div>`;
+                }
+
+                if (data.news.length >= 1 && !data.isCity) {
+                    if (data.isFeedBack) {
+                        document.querySelectorAll('#gallery-block, #news-block, #booking-block').forEach(node =>
+                            node.classList.add('col-sm-4'));
+                        document.getElementById('booking-block').style.display = '';
+                    } else
+                        document.querySelectorAll('#gallery-block, #news-block').forEach(node => 
+                            node.classList.add('col-sm-6'));
+
+                    document.getElementById('news-block').innerHTML = '<h3>' + translation.Object_News_Title(cultureKey) + '</h3>';
+                    for (const itemNew of data.news) {
+                        document.getElementById('news-block').innerHTML += `<div class="item-new" data-id="${itemNew.itemId}">
+                                    <h4>${itemNew.title}</h4>
+                                    <img src="${itemNew.imageUrl}" />
+                                    <p>${itemNew.introtext}</p>
+                                </div>`;
+                    }
+                } else {
+                    if (data.isFeedBack) {
+                        document.querySelectorAll('#gallery-block, #booking-block').forEach(node => 
+                            node.classList.add('col-sm-6'));
+                        document.getElementById('booking-block').style.display = '';
+                    } else
+                        document.getElementByIdt('gallery-block').classList.add('col-sm-6 col-sm-offset-3');
+                    document.getElementById('news-block').classList.add('hidden');
                 }
             } else {
-                if (data.isFeedBack) {
-                    $('#gallery-block, #booking-block').addClass('col-sm-6');
-					// if(data.special_offer){
-						// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
-					// }
-                    $('#booking-block').show();
-                } else {
-                    $('#gallery-block').addClass('col-sm-6 col-sm-offset-3');
-                }
-                $('#news-block').addClass('hidden');
+                document.getElementById('booking-block').classList.add('col-sm-6 col-sm-offset-3');
+                document.getElementById('booking-block').style.display = '';
             }
-			}
-			else{
-				$('#booking-block').addClass('col-sm-6 col-sm-offset-3');
-				// if(data.special_offer){
-					// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
-				// }
-                $('#booking-block').show();
-			}
-			$('.about-object-close-btn').show();
-			if(!showFeedBack){
-				if(placeId || parseInt($('#search-panel').attr('data-latitude')) != 0){
-					setTimeout(function(){
-						if(placeId){
-							initMapMarker(placeId, 'object-location');
-						}
-						else{
-							initMap('object-location');
-						}
-					}, 1000);
-				}
-				else{
-					$('.object-location').hide();
-				}
-			}
-			else{
-				$('.object-location').hide();
-			}
-        }
-    }).done(function() {
-		aboutContent.fadeIn(500);
-        panoIsLoad = false;
-        loadGallery = true;
-    });
-    $('.about-object-modal').dequeue();
-    });
+            document.querySelector('.about-object-close-btn').style.display = '';
+            if(!showFeedBack){
+                if(data.placeId || parseInt(document.getElementById('search-panel').getAttribute('data-latitude')) != 0){
+                    // check
+                    setTimeout(() => data.placeId ? initMapMarker(data.placeId, 'object-location')
+                        : initMap('object-location')
+                    , 1000);
+                } else
+                    document.querySelector('.object-location').style.display = 'none';
+            } else
+                document.querySelector('.object-location').style.display = 'none';
+        })
+        .then(() => {
+            aboutContent.fadeIn(500);
+            panoIsLoad = false;
+            loadGallery = true;
+        })
 }
+
 //Ajax загрузка контента объекта(например открытие окна с новостью)
 function getInnerContent() {
     $this = $(this);

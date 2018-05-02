@@ -163,14 +163,12 @@ $(document).on('click', '.about-object-modal a[href*=\\#]', function() {
     OnCloseAboutObjectModal();
 })
 $(document).on('click', '.prev-new', function() {
-    var offset = parseInt($(this).attr('data-offset'));
+    var offset = parseInt(this.getAttribute('data-offset'));
     var nextOffset = parseInt($('.next-new').attr('data-offset'));
     if (offset >= 0) {
+        this.setAttribute('data-offset', offset - 3);
+        document.querySelector('.next-new').setAttribute('data-offset', nextOffset - 3);
         OnLoadNews(offset);
-        if (offset >= 0) {
-            $(this).attr('data-offset', offset - 3);
-            $('.next-new').attr('data-offset', nextOffset - 3);
-        }
     }
 });
 $(document).on('click', '.next-new', nextNew);
@@ -848,8 +846,8 @@ function nextNew() {
         count = parseInt($('.about-block.block-2 h3').attr('data-count'));
 
     if (offset < count) {
+        document.querySelector('.next-new').setAttribute('data-offset', offset + 3);
         OnLoadNews(offset);
-        $(this).attr('data-offset', offset + 3);
         if ((count - offset) > 0)
             $('.prev-new').attr('data-offset', prevOffset + 3);
     }
