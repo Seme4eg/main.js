@@ -58,6 +58,7 @@ function GetParentCategories() {
             }
 
         })
+        .then(() => fetchComplete())
         .catch (error => {
             console.log('Request failed', error);
         });
@@ -113,6 +114,7 @@ function GetFilterMap() {
             map.querySelector('svg').remove();
             
         })
+        .then(() => fetchComplete())
         .catch (error => console.log('Request failed', error));  
 }
 
@@ -238,6 +240,7 @@ function GetTopObjects() {
                 searchResults.style.display = ''; // сдесь была fadeIn(500), можно прописать анимацию на JS
             }
         })
+        .then(() => fetchComplete())
         .catch (error => {
             console.log('Request failed', error);
         });
@@ -442,6 +445,7 @@ function OnFilterSearch() {
             searchResults.style.display = '';
             
         })
+        .then(() => fetchComplete())
 }
 
 
@@ -562,6 +566,7 @@ function GetHotRealEstates() {
             searchResults.style.display = '';
 
         })
+        .then(() => fetchComplete())
 }
 
 // поиск на сайте
@@ -712,6 +717,7 @@ function OnAjaxSearch(title, OnLoaded, count, exclude) {
             searchResults.style.display = '';
             
         })
+        .then(() => fetchComplete())
 }
 
 //Ajax загрузка панораммы на сайт
@@ -864,6 +870,8 @@ function getPano(itemId) {
             // NOT DEFINED
             fbq('track', 'PageView');
             fbq('track','ViewContent',{value:3.50, currency:'USD', content_name: $('title').text()});
+
+            fetchComplete();
         })
 }
 
@@ -992,6 +1000,7 @@ function OnCategorySearch(category, categoryId, isFolder, title) {
                 searchResults.style.display = '';
                 
             })
+            .then(() => fetchComplete())
     }
 }
 
@@ -1078,6 +1087,7 @@ function getAboutInfo(isContacts) {
         .then(() => {
             panoIsLoad = false;
             loadMap = true;
+            fetchComplete();
         })
 }
 
@@ -1104,7 +1114,10 @@ function OnLoadNews(offset) {
             }
 
         })
-        .then(() => panoIsLoad = false);   
+        .then(() => {
+            panoIsLoad = false
+            fetchComplete()
+        });
 }
 
 
@@ -1133,7 +1146,7 @@ function OnLoadNews(offset) {
 
 // ---------------------- ф-ю ниже я НЕ ТЕСТИРОВАЛ - не триггерится ------------------------
 
-//Ajax подгрузчик обектов(Изначально загружается 10 объектов при пролистывании запускается эта функция и подгружаются еще 10 объектов ну или сколько есть)
+// подгрузчик обектов(Изначально загружается 10 объектов при пролистывании запускается эта функция и подгружаются еще 10 объектов ну или сколько есть)
 function OnLoadObjects(category, offset) {
     let cultureKey = getUrlVars()["lang"] || 'en',
     searchResults = document.querySelector('.site-search-results .search-content .category-list');
@@ -1144,9 +1157,10 @@ function OnLoadObjects(category, offset) {
         parseInt(document.querySelector('.radio-btns .select-list input:checked').value)
         : NaN;
     let categoryId = document.querySelector('#type-select .select-active').getAttribute('data-categoryId'),
-        type = docuemnt.querySelector('.radio-btns input[name="type"]:checked').value,
+        type = document.querySelector('.radio-btns input[name="type"]:checked').value,
         isFilter = parseInt(document.querySelector('.search-logo').getAttribute('data-isfilter'));
     let exclude = '';
+    let url = 'https://thai.hub360.info/api/loading-objects';
 
     if (category == 35) {
         if (isFilter) {
@@ -1174,13 +1188,13 @@ function OnLoadObjects(category, offset) {
         exclude: exclude,
         rand: getRandom()
     }
-    let url = `https://thai.hub360.info/api/loading-objects?lang=${cultureKey}${getUrlString(data)}`;
+    url += `?lang=${cultureKey}${getUrlString(data)}`;
     
     fetch(url)
     .then(response => response.json())
     .then(data => {
         let [items, count, priceNowMin, priceNowMax] = 
-            [data.items, count, $("#slider-range").slider("values", 0), $("#slider-range").slider("values", 1)];
+            [data.items, 0, $("#slider-range").slider("values", 0), $("#slider-range").slider("values", 1)];
 
         if (category == 35) {
             if (isFilter) {
@@ -1188,7 +1202,6 @@ function OnLoadObjects(category, offset) {
                     for (const item of items) {
                         let [a, b] = [parseInt(item.priceRentDaily), parseInt(item.priceRentMonthly)];
                         let obj = buildDOMObj(item, {'cultureKey': cultureKey});
-                        console.log(obj);
 
                         if (rentType == 1 && categoryId != '327-land') {
                             if (a >= priceNowMin && a <= priceNowMax && a != 0 && (districts == 0 || districts.indexOf(item.district) >= 0)) {
@@ -1331,7 +1344,9 @@ function OnLoadObjects(category, offset) {
             return obj.link + arr[0] + obj.info + arr[1] + obj.addInfo + arr[2] + obj.contact;
         }
         
-    })   
+    })
+    .then(() => fetchComplete())
+    .catch(error => console.log(error));
 }
 
 
@@ -1457,188 +1472,198 @@ function getPanoByCategoryId(itemId) {
     });
 }
 
-// загрузка информации об объекте
+//Ajax загрузка информации об объекте
 function getAboutObjectInfo(showFeedBack){
-    console.log('running');
 	if (!$.cookie('object_info')) {
 		$.cookie('object_info', true, {
 				expires: 300,
 				path: '/'
 		});
-		if (document.getElementById('about-object-btn div'))
-		    document.getElementById('about-object-btn div').remove();
+		$('#about-object-btn div').remove();
     }
-    if(document.getElementById('search-panel').classList.contains('open'))
+    if($('#search-panel').hasClass('open')){
 		OnCloseSearchPanel(false);
-	if(showFeedBack)
+	}
+	if(showFeedBack){
 		ga('send', 'event', 'Button', 'Click', 'FeedBack Button Click');
-	else
-        ga('send', 'event', 'Button', 'Click', 'Open Object Info');
-        
-	document.querySelector('.object-location').style.display = '';
+	}
+	else{
+		ga('send', 'event', 'Button', 'Click', 'Open Object Info');
+	}
+	$('.object-location').show();
     OnShowHideControls(true, false);
-    var cultureKey = getUrlVars()["lang"] || 'en';
-    var aboutContent = document.querySelector('.about-object-content');
-    var panoId = getUrlVars()["p"].split('-')[0] || 1;
-    console.log(panoId);
-    
-    $('.about-object-modal').animate({right: 0}, 500);
-
-    let url = `https://thai.hub360.info/api/get-about-object-info?lang=${cultureKey}&itemId=${panoId}&rand=${getRandom()}`;
-
-    document.getElementById('about-object-body').innerHTML += preloader;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (document.getElementById('about-object-body #loader'))
-                document.getElementById('about-object-body #loader').remove();
-
-            console.log(document.querySelector('booking-block h3'));
-            document.querySelector('#booking-block h3').textContent = 
-                data.type == 2 ? translation.Get_Special_Offer(cultureKey)
-                    : data.type == 1 ? translation.Get_Personal_Offer(cultureKey)
-                        : translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey);
-
-            document.getElementById('aboutObjectTitle').textContent = data.title;
-
-            if(!showFeedBack){
-                if(data.bodyTitle)
-                    document.querySelector('.about-object-content .object-content').innerHTML += '<h2>' + data.bodyTitle + '</h2>';
-                if(data.rent_table){
-                    document.querySelector('.about-object-content .object-content').innerHTML += `<table class="rent-table"><tbody>
-                        <tr>
-                            <td></td>
-                            <td>${translation.Daily_Rent_Table(cultureKey)}</td>
-                            <td>${translation.Weekly_Rent_Table(cultureKey)}</td>
-                            <td>${translation.Monthly_Rent_Table(cultureKey)}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.Low_Season(cultureKey)}<br/>
-                                <small>${getAllMonth(data.low_season, cultureKey).replace(', ', ' - ')}</small></td>
-                            <td>${(data.low_season_daily ? data.low_season_daily + ' ฿' : '')}</td>
-                            <td>${(data.low_season_weekly ? data.low_season_weekly + ' ฿' : '')}</td>
-                            <td>${(data.low_season_monthly ? data.low_season_monthly + ' ฿' : '')}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.High_Season(cultureKey)}<br />
-                                <small>${getAllMonth(data.high_season, cultureKey)}</small></td>
-                            <td>${(data.high_season_daily ? data.high_season_daily + ' ฿' : '')}</td>
-                            <td>${(data.high_season_weekly ? data.high_season_weekly + ' ฿' : '')}</td>
-                            <td>${(data.high_season_monthly ? data.high_season_monthly + ' ฿' : '')}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.Peak_Season(cultureKey)}<br />
-                                <small>${getAllMonth(data.peak_season, cultureKey)}</small></td>
-                            <td>${(data.peak_season_daily ? data.peak_season_daily + ' ฿' : '')}</td>
-                            <td>${(data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '')}</td>
-                            <td>${(data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '')}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.Long_Term(cultureKey)}<br>
-                                <small>${translation.Get_Min_Rent(parseInt(data.long_term_min), cultureKey)}</small></td>
-                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
-                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
-                            <td>${(data.long_term ? data.long_term + ' ฿' : '')}</td>
-                        </tr>
-                        </tbody></table>`;
-                }
-
-                console.log(data);
-                document.querySelector('.object-content').innerHTML += data.content;
-                console.log(document.querySelector('.object-content'));
-                let temp = document.querySelector('.object-content table').parentElement;
-                console.log(temp);
-                temp.innerHTML = '<div class="table-responsive">' + temp.innerHTML + '</div>';
-                console.log(document.querySelector('.object-content'));
-                
-                document.querySelector('.about-object-content svg').remove();
-
-                if (data.video) {
-                    document.querySelector('.owl-main').innerHTML += `<div class="gallery-item video-item" style="display: none;">
-                            <iframe src="https://www.youtube.com/embed/${data.video}" frameborder="0" style="border:0;"></iframe></div>`;
-                    document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
-                            <div class="gallery-item" style="background-image: url(https://img.youtube.com/vi/${data.video}/hqdefault.jpg);"></div>
-                        </div>`;
-                }
-                document.querySelector('.owl-main').innerHTML += `<a class="fancybox" data-fancybox="gallery" 
-                        href="${data.fullImage}" title="${data.title}">
-                            <div class="gallery-item" style="background-image: url(${data.image});display: none;"></div>
-                    </a>`;
-                document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
-                        <div class="gallery-item" style="background-image: url(${data.image});"></div></div>`;
-
-                if (data.gallery) {
-                    for (const galleryItem of data.gallery) {
-                        document.querySelector('.owl-main').innerHTML += `<a class="fancybox" data-fancybox="gallery" 
-                                href="${galleryItem.url}" title="${data.title}">
-                                    <div class="gallery-item" style="background-image: url(${galleryItem.thumbUrl});display: none;"></div>
-                            </a>`;
-                        document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
-                                <div class="gallery-item" style="background-image: url(${galleryItem.thumbUrl});"></div></div>`;
-                    };
-                    document.querySelector('.owl-navigation').innerHTML += `<div class="owl-prev" id="owl-prev">
-                            </div><div class="owl-next" id="owl-next"></div>`;
-                }
-
-                if (data.news.length >= 1 && !data.isCity) {
-                    if (data.isFeedBack) {
-                        document.querySelectorAll('#gallery-block, #news-block, #booking-block').forEach(node =>
-                            node.classList.add('col-sm-4'));
-                        document.getElementById('booking-block').style.display = '';
-                    } else
-                        document.querySelectorAll('#gallery-block, #news-block').forEach(node => 
-                            node.classList.add('col-sm-6'));
-
-                    document.getElementById('news-block').innerHTML = '<h3>' + translation.Object_News_Title(cultureKey) + '</h3>';
-                    for (const itemNew of data.news) {
-                        document.getElementById('news-block').innerHTML += `<div class="item-new" data-id="${itemNew.itemId}">
-                                    <h4>${itemNew.title}</h4>
-                                    <img src="${itemNew.imageUrl}" />
-                                    <p>${itemNew.introtext}</p>
-                                </div>`;
-                    }
-                } else {
-                    if (data.isFeedBack) {
-                        document.querySelectorAll('#gallery-block, #booking-block').forEach(node => 
-                            node.classList.add('col-sm-6'));
-                        document.getElementById('booking-block').style.display = '';
-                    } else
-                        document.getElementByIdt('gallery-block').classList.add('col-sm-6 col-sm-offset-3');
-                    document.getElementById('news-block').classList.add('hidden');
-                }
-            } else {
-                document.getElementById('booking-block').classList.add('col-sm-6 col-sm-offset-3');
-                document.getElementById('booking-block').style.display = '';
-            }
-            document.querySelector('.about-object-close-btn').style.display = '';
-            if(!showFeedBack){
-                if(data.placeId || parseInt(document.getElementById('search-panel').getAttribute('data-latitude')) != 0){
-                    // check
-                    setTimeout(() => data.placeId ? initMapMarker(data.placeId, 'object-location')
-                        : initMap('object-location')
-                    , 1000);
-                } else
-                    document.querySelector('.object-location').style.display = 'none';
-            } else
-                document.querySelector('.object-location').style.display = 'none';
-        })
-        .then(() => {
-            aboutContent.fadeIn(500);
-            panoIsLoad = false;
-            loadGallery = true;
-        })
-}
-
-//Ajax загрузка контента объекта(например открытие окна с новостью)
-function getInnerContent() {
-    $this = $(this);
     var cultureKey = getUrlVars()["lang"];
 	if(typeof cultureKey === 'undefined'){
 		cultureKey = 'en';
 	}
-    var innerContainer = $('.inner-content');
-    itemId = $this.attr('data-id');
+    var aboutContent = $('.about-object-content');
+    var panoId = getUrlVars()["p"];
+    if (typeof panoId === 'undefined' || panoId === null) {
+        panoId = 1;
+    } else {
+        panoId = getUrlVars()["p"].split('-')[0];
+    }
+    $('.about-object-modal').queue(function() {
+		$('.about-object-modal').animate({right: 0}, 500);
+		$.ajax({
+        url: 'https://thai.hub360.info/api/get-about-object-info',
+        data: {
+            itemId: panoId,
+            lang: cultureKey,
+			rand: getRandom()
+        },
+        beforeSend: function() {
+            $('#about-object-body').append(preloader);
+        },
+        success: function(data) {
+			$('#about-object-body #loader').remove();
+            var album = data.gallery;
+            var news = data.news;
+			var placeId = data.placeId;
+            var counter = 4;
+			if(data.type == 2){
+				$('#booking-block h3').text(translation.Get_Special_Offer(cultureKey));
+			}
+			else if(data.type == 1){
+				$('#booking-block h3').text(translation.Get_Personal_Offer(cultureKey));
+			}
+			else{
+				$('#booking-block h3').text(translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey));
+			}
+            $('#aboutObjectTitle').text(data.title);
+			if(!showFeedBack){
+				var bodyTitle = data.bodytitle;
+				if(bodyTitle){
+					$('.about-object-content .object-content').append('<h2>' + bodyTitle + '</h2>');
+				}
+			if(data.rent_table){
+				var lowSeason = data.low_season;
+				var highSeason = data.high_season;
+				var peakSeason = data.peak_season;
+				var longTermMin = parseInt(data.long_term_min);
+				$('.about-object-content .object-content').append('<table class="rent-table"><tbody>\
+					<tr>\
+						<td></td>\
+						<td>' + translation.Daily_Rent_Table(cultureKey) + '</td>\
+						<td>' + translation.Weekly_Rent_Table(cultureKey) + '</td>\
+						<td>' + translation.Monthly_Rent_Table(cultureKey) + '</td>\
+					</tr>\
+					<tr>\
+						<td>' + translation.Low_Season(cultureKey) + '<br /><small>' + getAllMonth(lowSeason, cultureKey).replace(', ', ' - ') + '</small></td>\
+						<td>' + (data.low_season_daily ? data.low_season_daily + ' ฿' : '') + '</td>\
+						<td>' + (data.low_season_weekly ? data.low_season_weekly + ' ฿' : '') + '</td>\
+						<td>' + (data.low_season_monthly ? data.low_season_monthly + ' ฿' : '') + '</td>\
+					</tr>\
+					<tr>\
+						<td>' + translation.High_Season(cultureKey) + '<br /><small>' + getAllMonth(highSeason, cultureKey) + '</small></td>\
+						<td>' + (data.high_season_daily ? data.high_season_daily + ' ฿' : '') + '</td>\
+						<td>' + (data.high_season_weekly ? data.high_season_weekly + ' ฿' : '') + '</td>\
+						<td>' + (data.high_season_monthly ? data.high_season_monthly + ' ฿' : '') + '</td>\
+					</tr>\
+					<tr>\
+						<td>' + translation.Peak_Season(cultureKey) + '<br /><small>' + getAllMonth(peakSeason, cultureKey) + '</small></td>\
+						<td>' + (data.peak_season_daily ? data.peak_season_daily + ' ฿' : '') + '</td>\
+						<td>' + (data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '') + '</td>\
+						<td>' + (data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '') + '</td>\
+					</tr>\
+					<tr>\
+						<td>' + translation.Long_Term(cultureKey) + '<br><small>' + translation.Get_Min_Rent(longTermMin, cultureKey) + '</small></td>\
+						<td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>\
+						<td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>\
+						<td>' + (data.long_term ? data.long_term + ' ฿' : '') + '</td>\
+					</tr>\
+					</tbody></table>');
+			}
+            $('.object-content').append(data.content).find('table').wrap('<div class="table-responsive"></div>');
+            $('.about-object-content svg').remove();
+            if (data.video == null || data.video == '' || data.video == undefined || parseInt(data.video) == 0) {} else {
+                $('.owl-main').append('<div class="gallery-item video-item" style="display: none;"><iframe src="https://www.youtube.com/embed/' + data.video + '" frameborder="0" style="border:0;"></iframe></div>');
+                $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item" style="background-image: url(https://img.youtube.com/vi/' + data.video + '/hqdefault.jpg);"></div></div>');
+            }
+            $('.owl-main').append('<a class="fancybox" data-fancybox="gallery" href="' + data.fullImage + '" title="' + data.title + '"><div class="gallery-item" style="background-image: url(' + data.image + ');display: none;"></div></a>');
+            $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item"  style="background-image: url(' + data.image + ');"></div></div>');
+            if (album) {
+                for (key in album) {
+                    var galleryItem = album[key];
+                    $('.owl-main').append('<a class="fancybox" data-fancybox="gallery" href="' + galleryItem.url + '" title="' + data.title + '"><div class="gallery-item" style="background-image: url(' + galleryItem.thumbUrl + ');display: none;"></div></a>');
+                    $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item" style="background-image: url(' + galleryItem.thumbUrl + ');"></div></div>');
+                };
+				$('.owl-navigation').append('<div class="owl-prev" id="owl-prev"></div><div class="owl-next" id="owl-next"></div>');
+            }
+            if (news.length >= 1 && !data.isCity) {
+                if (data.isFeedBack) {
+                    $('#gallery-block, #news-block, #booking-block').addClass('col-sm-4');
+					// if(data.special_offer){
+						// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
+					// }
+                    $('#booking-block').show();
+                } else {
+                    $('#gallery-block, #news-block').addClass('col-sm-6');
+                }
+                $('#news-block').empty().append('<h3>' + translation.Object_News_Title(cultureKey) + '</h3>');
+                for (key in news) {
+                    var itemNew = news[key];
+                    $('#news-block').append('<div class="item-new" data-id="' + itemNew.itemId + '">\
+								<h4>' + itemNew.title + '</h4>\
+								<img src="' + itemNew.imageUrl + '" />\
+								<p>' + itemNew.introtext + '</p>\
+							</div>');
+                }
+            } else {
+                if (data.isFeedBack) {
+                    $('#gallery-block, #booking-block').addClass('col-sm-6');
+					// if(data.special_offer){
+						// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
+					// }
+                    $('#booking-block').show();
+                } else {
+                    $('#gallery-block').addClass('col-sm-6 col-sm-offset-3');
+                }
+                $('#news-block').addClass('hidden');
+            }
+			}
+			else{
+				$('#booking-block').addClass('col-sm-6 col-sm-offset-3');
+				// if(data.special_offer){
+					// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
+				// }
+                $('#booking-block').show();
+			}
+			$('.about-object-close-btn').show();
+			if(!showFeedBack){
+				if(placeId || parseInt($('#search-panel').attr('data-latitude')) != 0){
+					setTimeout(function(){
+						if(placeId){
+							initMapMarker(placeId, 'object-location');
+						}
+						else{
+							initMap('object-location');
+						}
+					}, 1000);
+				}
+				else{
+					$('.object-location').hide();
+				}
+			}
+			else{
+				$('.object-location').hide();
+			}
+        }
+    }).done(function() {
+		aboutContent.fadeIn(500);
+        panoIsLoad = false;
+        loadGallery = true;
+    });
+    $('.about-object-modal').dequeue();
+    });
+}
+
+//Ajax загрузка контента объекта(например открытие окна с новостью)
+function getInnerContent() {
+    var cultureKey = getUrlVars()["lang"] || 'en',
+        innerContainer = document.querySelector('.inner-content'),
+        itemId = this.getAttribute('data-id');
+    
     $('.inner-content-close-btn, .inner-content').fadeIn(500);
     $('.inner-modal').animate({
         left: 0,
@@ -1646,92 +1671,84 @@ function getInnerContent() {
         bottom: 0,
         right: 0
     }, 500);
-    $.ajax({
-        url: 'https://thai.hub360.info/api/get-default-object',
-        data: {
-            itemId: itemId,
-            lang: cultureKey,
-			rand: getRandom()
-        },
-        beforeSend: function() {},
-        success: function(data) {
-            if ($this.hasClass('item-new')) {
-                if (data.imageUrl) {
-                    innerContainer.append('<h2>' + data.title + '</h2><img src="' + data.imageUrl + '" class="main-new-img"/><div class="main-new-body">' + data.content + '</div>');
-                } else {
-                    innerContainer.append('<h2>' + data.title + '</h2><div class="main-new-body">' + data.content + '</div>');
-                }
-            } else {
-                innerContainer.append('<h2>' + data.title + '</h2><div>' + data.content + '</div>');
-            }
-        }
-    }).done(function() {
-        panoIsLoad = false;
-    });
+
+    let url =  `https://thai.hub360.info/api/get-default-object?lang=${cultureKey}&itemId=${itemId}&rand=${getRandom()}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            innerContainer.innerHTML += (this.classList.contains('item-new')) ?
+                (data.imageUrl ? `<h2>${data.title}</h2>
+                <img src="${data.imageUrl}" class="main-new-img"/>
+                <div class="main-new-body">${data.content}</div>`
+                : `<h2>${data.title}</h2><div class="main-new-body">${data.content}</div>`)
+                    : `<h2>${data.title}</h2><div>${data.content}</div>`
+        })
+
+        .then(() => {
+            panoIsLoad = false
+            fetchComplete();
+        });   
 }
+
 //Ajax загрузка и открытие окна help
 function getHelpInfo(dataId) {
     var cultureKey = getUrlVars()["lang"] || 'en';
     OnShowHideControls(true, false);
-    var helpContainer = $('.help-content');
+    var helpContainer = document.querySelector('.help-content');
+
     $('.help-content-close-btn, .help-content').fadeIn(500);
     $('.help-modal').animate({
         left: 0
     }, 500);
-    $.ajax({
-        url: 'https://thai.hub360.info/api/get-default-object',
-        data: {
-            itemId: dataId,
-            lang: cultureKey,
-			rand: getRandom()
-        },
-        beforeSend: function() {
-            helpContainer.append(preloader);
-        },
-        success: function(data) {
-            $('.help-content svg').remove();
-            helpContainer.append('<h2>' + data.title + '</h2><div>' + data.content + '</div>');
-        }
-    }).done(function() {
-        panoIsLoad = false;
-    });
+
+    let url = `https://thai.hub360.info/api/get-default-object?lang=${cultureKey}&itemId=${dataId}&rand=${getRandom()}`;
+    helpContainer.innerHTML += preloader;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('.help-content svg').remove();
+            console.log(data.conetnt);
+            helpContainer.innerHTML += `<h2>${data.title}</h2><div>${data.content}</div>`;
+        })
+        .then(() => {
+            panoIsLoad = false
+            fetchComplete();
+        });    
 }
 
 
 
 
 //Функция по завершению ajax загрузки
-$(document).ajaxComplete(function() {
+function fetchComplete() {
     if (panoIsLoad) {
         xmlParser(panoVrXml);
         panoIsLoad = false;
     }
-    if (loadGallery) {
+    if (loadGallery)
         setTimeout(function(){myCarouselInit();loadGallery = false;}, 100)
-    }
-    if ($('#mobile-map-search-btn').hasClass('active')) {
+    if ($('#mobile-map-search-btn').hasClass('active'))
         initMap();
-    }
+
     jQuery('.site-search-results').not('.scroll-wrapper').on("scroll", function() {
         var category = $('.search-logo').attr('data-id');
         var isFolder = parseInt($('.search-logo').attr('data-isfolder'));
         var scrollBodyHeight = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-element_outer').height());
         var scrollBarHeight = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-bar').height());
         var scrollBarPosition = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-bar').css('top'));
-		    var exclude = GetExludeObjects(true);
-		    var count = getObjectsCount();
-		    var title = $('#search').val();
+        var exclude = GetExludeObjects(true);
+        var count = getObjectsCount();
+        var title = $('#search').val();
+
         if ((scrollBarHeight + scrollBarPosition) == scrollBodyHeight && isLoaded && scrollBodyHeight > 100) {
             isLoaded = false;
-			if(title.length > 1){
-				OnAjaxSearch(title, true, count, exclude);
-			}
-			else{
-				OnLoadObjects(category, count);
-			}
+            title.length > 1 ? OnAjaxSearch(title, true, count, exclude)
+                : OnLoadObjects(category, count);
         }
     });
-});
+};
 
 //Получение координат панораммы из xml файла
 function xmlParser(xmlUrl) {
@@ -1821,20 +1838,20 @@ function buildDOMObj(item, obj) {
     return {
         1: {
             divRent: '<div class="rent"></div>',
-            pPrice: `<p class="object-price">${priceToString(item.priceRentMonthly)} <b>${getPricesAndSymbol()}</b></p>`
+            pPrice: `<p class="object-price">${item.priceRentMonthly ? priceToString(item.priceRentMonthly) : 0} <b>${getPricesAndSymbol()}</b></p>`
         },
         2: {
             divRent: '<div class="sale"></div>',
-            pPrice: `<p class="object-price">${priceToString(item.priceSale)} <b>${getPricesAndSymbol()}</b></p>`
+            pPrice: `<p class="object-price">${item.priceSale ? priceToString(item.priceSale) : 0} <b>${getPricesAndSymbol()}</b></p>`
         },
         3: {
             divRent: '<div class="sale-rent"></div>',
             pPrice: `<p class="second-object-price"><i>Rent: </i>
-                        ${priceToString(item.priceRentMonthly)} 
+                        ${item.priceRentMonthly ? priceToString(item.priceRentMonthly) : 0} 
                         <b>${getPricesAndSymbol()}</b>
                      </p>
                      <p class="object-price"><i>Sale: </i>
-                        ${priceToString(item.priceSale)} 
+                        ${item.priceSale ? priceToString(item.priceSale) : 0} 
                         <b>${getPricesAndSymbol()}</b>
                      </p>`
         },
