@@ -517,8 +517,10 @@ function OnSearchPanelShow() {
             }
         }, 500);
         if (isMobile.any()) {
-            let deviceWidthNow = window.innerWidth > 396 ? deviceWidthNow - 396 : window.innerWidth;
-            let left = 0;
+            var deviceWidthNow = window.innerWidth;
+            var left = 0;
+            if (deviceWidthNow > 396)
+                left = deviceWidthNow - 396;
             $('#search-panel').css('left', left + 'px').addClass('active');
         }
         $('#search-panel').dequeue();

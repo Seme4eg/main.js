@@ -275,266 +275,274 @@ document.addEventListener('DOMContentLoaded', function() {
         }, {
             passive: true
         });
+
+
+        
+        // --- functions - handlers ---
+        
+        function panelTouchMove (event) {
+            if (!$('#filters-body').hasClass('active')) {
+                nowPoint = event.changedTouches[0];
+
+                let otk = {
+                    x: nowPoint.pageX - startPoint.x,
+                    y: nowPoint.pageY - startPoint.y
+                };
+
+                let left = window.innerWidth > 396 ? window.innerWidth - (396 - otk.y) : otk.x;
+
+                if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5))
+                    panel.style.left = left + 'px';
+            }
+        }
+
+        function panelTouchEnd (event) {
+            if (!$('#filters-body').hasClass('active')) {
+                nowPoint = event.changedTouches[0];
+        
+                let pdelay = new Date(),
+                    xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+                    yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+                    left = window.innerWidth > 396 ? window.innerWidth - 396 : 0;
+        
+                if ((xAbs > 20 || yAbs > 20)) {
+                    if (xAbs > (yAbs * 5)) {
+                        if (xAbs > 130) {
+                            if (nowPoint.pageX > startPoint.x) {
+                                $('#search-panel').animate({
+                                    left: window.innerWidth
+                                }, 500);
+                                $('#search-panel').queue(function() {
+                                    OnCloseSearchPanel(false);
+                                    $('#search-panel').dequeue();
+                                });
+                            }
+                        } else {
+                            $('#search-panel').animate({
+                                left: left
+                            }, 500);
+                        }
+                    } else {
+                        $('#search-panel').animate({
+                            left: left
+                        }, 500);
+                    }
+                }
+            }
+        }
+
+        function categoryBtnTouchMove(event) {
+            if (event.targetTouches.length == 1) {
+                let touch = event.targetTouches[0];
+                let moveX = touch.pageX - touchOffsetX;
+                categoryBtn.style.right = (window.innerWidth - 38 - moveX) + 'px';
+                panel.style.width = (window.innerWidth - 53 - moveX) + 'px';
+            }
+        }
+
+        function categoryBtnTouchEnd(event) {
+            if (event.changedTouches.length == 1) {
+                let widthNow = parseInt(panel.style.width);
+                if (widthNow >= 130) {
+                    categoryBtn.style.right = 15 + 'px';
+                    OnSearchPanelShow();
+                } else {
+                    $('#category-search-btn').animate({
+                        right: 15
+                    }, 500);
+                    $('#search-panel').animate({
+                        width: 0
+                    }, 500);
+                }
+            }
+        }
+        
+        function aboutObjectBtnHandler(event){
+        event.preventDefault();
+            if (event.changedTouches.length == 1) {
+                let widthNow = parseInt(aboutObjectModal.style.right);
+                if ((window.innerWidth - widthNow) >= 130) {
+                    aboutObjectBtn.style.left = 15 + 'px';
+                    getAboutObjectInfo(false);
+                    clearTimeout(timeout);
+                } else {
+                    $('#about-object-btn').animate({
+                        left: 15
+                    }, 500);
+                    $('#about-object-modal').animate({
+                        right: '100%'
+                    }, 500);
+                }
+            }
+        }
+        
+        function videoModalTouchMove(event) {
+            nowPoint = event.changedTouches[0];
+        
+            let otk = {
+                x: nowPoint.pageX - startPoint.x,
+                y: nowPoint.pageY - startPoint.y
+            };
+        
+            let left = otk.x;
+        
+            if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
+                videoModal.style.right = (left * (-1)) + 'px';
+                videoModal.style.left = left + 'px';
+            }
+        }
+        
+        function videoModalTouchEnd(event) {
+            nowPoint = event.changedTouches[0];
+        
+            let pdelay = new Date(),
+                xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+                yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+                right = '100%';
+        
+            if ((xAbs > 20 || yAbs > 20)) {
+                if (xAbs > (yAbs * 5)) {
+                    if (xAbs > 130) {
+                        if (nowPoint.pageX > startPoint.x) {
+                            $('#video-modal-window').animate({
+                                right: (window.innerWidth * (-1)),
+                                left: window.innerWidth
+                            }, 500);
+                            $('#video-modal-window').queue(function() {
+                                OnCloseVideoModal();
+                                $('#video-modal-window').css({
+                                    right: '0',
+                                    left: '100%'
+                                });
+                                $('#video-modal-window').dequeue();
+                            });
+                        }
+                    } else {
+                        $('#video-modal-window').animate({
+                            left: 0,
+                            right: 0
+                        }, 500);
+                    }
+                } else {
+                    $('#video-modal-window').animate({
+                        left: 0,
+                        right: 0
+                    }, 500);
+                }
+            }
+        }
+        
+        function aboutUsTouchMove(event) {
+            nowPoint = event.changedTouches[0];
+        
+            let otk = {
+                x: nowPoint.pageX - startPoint.x,
+                y: nowPoint.pageY - startPoint.y
+            };
+        
+            let left = otk.x;
+        
+            if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
+                aboutUsModal.style.right = (left * (-1)) + 'px';
+                aboutUsModal.style.left = left + 'px';
+            }
+        }
+        
+        function aboutUsTouchEnd(event) {
+            nowPoint = event.changedTouches[0];
+        
+            let pdelay = new Date(),
+                xAbs = Math.abs(startPoint.x - nowPoint.pageX),
+                yAbs = Math.abs(startPoint.y - nowPoint.pageY),
+                right = '100%';
+        
+            if ((xAbs > 20 || yAbs > 20)) {
+                if (xAbs > (yAbs * 5)) {
+                    if (xAbs > 130) {
+                        if (nowPoint.pageX > startPoint.x) {
+                            $('#about-modal-window').animate({
+                                right: (window.innerWidth * (-1)),
+                                left: window.innerWidth
+                            }, 500);
+                            $('#about-modal-window').queue(function() {
+                                OnCloseModal();
+                                $('#about-modal-window').css({
+                                    right: '0',
+                                    left: '100%'
+                                });
+                                $('#about-modal-window').dequeue();
+                            });
+                        }
+                    } else {
+                        $('#about-modal-window').animate({
+                            left: 0,
+                            right: 0
+                        }, 500);
+                    }
+                } else {
+                    $('#about-modal-window').animate({
+                        left: 0,
+                        right: 0
+                    }, 500);
+                }
+            }
+        }
+        
+        function btnTouchStart(event) {
+            if (event.targetTouches.length == 1) {
+                let touch = event.targetTouches[0];
+                touchOffsetX = touch.pageX - touch.target.offsetLeft;
+            }
+        }
+        
+        function createNewDate(event) {
+            startPoint.x = event.changedTouches[0].pageX;
+            startPoint.y = event.changedTouches[0].pageY;
+            ldelay = new Date();
+        }
+        
+        function helpTouchEnd(event) {
+            var pdelay = new Date();
+            nowPoint = event.changedTouches[0];
+            var xAbs = Math.abs(startPoint.x - nowPoint.pageX);
+            var yAbs = Math.abs(startPoint.y - nowPoint.pageY);
+            var right = '100%';
+        
+            if ((xAbs > 20 || yAbs > 20)) {
+                if (xAbs > (yAbs * 5)) {
+                    if (xAbs > 130) {
+                        if (nowPoint.pageX > startPoint.x) {
+                            $('#help-modal').animate({
+                                right: (window.innerWidth * (-1)),
+                                left: window.innerWidth
+                            }, 500);
+                            $('#help-modal').queue(function() {
+                                OnCloseHelpModal();
+                                $('#help-modal').css({
+                                    right: '0',
+                                    left: '100%'
+                                });
+                                $('#help-modal').dequeue();
+                            });
+                        }
+                    } else {
+                        $('#help-modal').animate({
+                            left: 0,
+                            right: 0
+                        }, 500);
+                    }
+                } else {
+                    $('#help-modal').animate({
+                        left: 0,
+                        right: 0
+                    }, 500);
+                }
+            }
+        }
+        
     }
 });
 
-// --- functions - handlers ---
-function panelTouchMove (event) {
-    if (!$('#filters-body').hasClass('active')) {
-        nowPoint = event.changedTouches[0];
-
-        let otk = {
-            x: nowPoint.pageX - startPoint.x,
-            y: nowPoint.pageY - startPoint.y
-        };
-
-        let left = window.innerWidth > 396 ? window.innerWidth - (396 - otk.y) : otk.x;
-
-        if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5))
-            panel.style.left = left + 'px';
-    }
-}
-
-function panelTouchEnd (event) {
-    if (!$('#filters-body').hasClass('active')) {
-        nowPoint = event.changedTouches[0];
-
-        let pdelay = new Date(),
-            xAbs = Math.abs(startPoint.x - nowPoint.pageX),
-            yAbs = Math.abs(startPoint.y - nowPoint.pageY),
-            left = window.innerWidth > 396 ? window.innerWidth - 396 : 0;
-
-        if ((xAbs > 20 || yAbs > 20)) {
-            if (xAbs > (yAbs * 5)) {
-                if (xAbs > 130) {
-                    if (nowPoint.pageX > startPoint.x) {
-                        $('#search-panel').animate({
-                            left: window.innerWidth
-                        }, 500);
-                        $('#search-panel').queue(function() {
-                            OnCloseSearchPanel(false);
-                            $('#search-panel').dequeue();
-                        });
-                    }
-                } else {
-                    $('#search-panel').animate({
-                        left: left
-                    }, 500);
-                }
-            } else {
-                $('#search-panel').animate({
-                    left: left
-                }, 500);
-            }
-        }
-    }
-}
-
-function categoryBtnTouchMove(event) {
-    if (event.targetTouches.length == 1) {
-        let touch = event.targetTouches[0];
-        let moveX = touch.pageX - touchOffsetX;
-        categoryBtn.style.right = (window.innerWidth - 38 - moveX) + 'px';
-        panel.style.width = (window.innerWidth - 53 - moveX) + 'px';
-    }
-}
-
-function categoryBtnTouchEnd(event) {
-    if (event.changedTouches.length == 1) {
-        let widthNow = parseInt(panel.style.width);
-        if (widthNow >= 130) {
-            categoryBtn.style.right = 15 + 'px';
-            OnSearchPanelShow();
-        } else {
-            $('#category-search-btn').animate({
-                right: 15
-            }, 500);
-            $('#search-panel').animate({
-                width: 0
-            }, 500);
-        }
-    }
-}
-
-function aboutObjectBtnHandler(event){
-event.preventDefault();
-    if (event.changedTouches.length == 1) {
-        let widthNow = parseInt(aboutObjectModal.style.right);
-        if ((window.innerWidth - widthNow) >= 130) {
-            aboutObjectBtn.style.left = 15 + 'px';
-            getAboutObjectInfo(false);
-            clearTimeout(timeout);
-        } else {
-            $('#about-object-btn').animate({
-                left: 15
-            }, 500);
-            $('#about-object-modal').animate({
-                right: '100%'
-            }, 500);
-        }
-    }
-}
-
-function videoModalTouchMove(event) {
-    nowPoint = event.changedTouches[0];
-
-    let otk = {
-        x: nowPoint.pageX - startPoint.x,
-        y: nowPoint.pageY - startPoint.y
-    };
-
-    let left = otk.x;
-
-    if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
-        videoModal.style.right = (left * (-1)) + 'px';
-        videoModal.style.left = left + 'px';
-    }
-}
-
-function videoModalTouchEnd(event) {
-    nowPoint = event.changedTouches[0];
-
-    let pdelay = new Date(),
-        xAbs = Math.abs(startPoint.x - nowPoint.pageX),
-        yAbs = Math.abs(startPoint.y - nowPoint.pageY),
-        right = '100%';
-
-    if ((xAbs > 20 || yAbs > 20)) {
-        if (xAbs > (yAbs * 5)) {
-            if (xAbs > 130) {
-                if (nowPoint.pageX > startPoint.x) {
-                    $('#video-modal-window').animate({
-                        right: (window.innerWidth * (-1)),
-                        left: window.innerWidth
-                    }, 500);
-                    $('#video-modal-window').queue(function() {
-                        OnCloseVideoModal();
-                        $('#video-modal-window').css({
-                            right: '0',
-                            left: '100%'
-                        });
-                        $('#video-modal-window').dequeue();
-                    });
-                }
-            } else {
-                $('#video-modal-window').animate({
-                    left: 0,
-                    right: 0
-                }, 500);
-            }
-        } else {
-            $('#video-modal-window').animate({
-                left: 0,
-                right: 0
-            }, 500);
-        }
-    }
-}
-
-function aboutUsTouchMove(event) {
-    nowPoint = event.changedTouches[0];
-
-    let otk = {
-        x: nowPoint.pageX - startPoint.x,
-        y: nowPoint.pageY - startPoint.y
-    };
-
-    let left = otk.x;
-
-    if (otk.x > 0 && Math.abs(otk.x) > Math.abs(otk.y * 5)) {
-        aboutUsModal.style.right = (left * (-1)) + 'px';
-        aboutUsModal.style.left = left + 'px';
-    }
-}
-
-function aboutUsTouchEnd(event) {
-    nowPoint = event.changedTouches[0];
-
-    let pdelay = new Date(),
-        xAbs = Math.abs(startPoint.x - nowPoint.pageX),
-        yAbs = Math.abs(startPoint.y - nowPoint.pageY),
-        right = '100%';
-
-    if ((xAbs > 20 || yAbs > 20)) {
-        if (xAbs > (yAbs * 5)) {
-            if (xAbs > 130) {
-                if (nowPoint.pageX > startPoint.x) {
-                    $('#about-modal-window').animate({
-                        right: (window.innerWidth * (-1)),
-                        left: window.innerWidth
-                    }, 500);
-                    $('#about-modal-window').queue(function() {
-                        OnCloseModal();
-                        $('#about-modal-window').css({
-                            right: '0',
-                            left: '100%'
-                        });
-                        $('#about-modal-window').dequeue();
-                    });
-                }
-            } else {
-                $('#about-modal-window').animate({
-                    left: 0,
-                    right: 0
-                }, 500);
-            }
-        } else {
-            $('#about-modal-window').animate({
-                left: 0,
-                right: 0
-            }, 500);
-        }
-    }
-}
-function btnTouchStart(event) {
-    if (event.targetTouches.length == 1) {
-        let touch = event.targetTouches[0];
-        touchOffsetX = touch.pageX - touch.target.offsetLeft;
-    }
-}
-function createNewDate(event) {
-    startPoint.x = event.changedTouches[0].pageX;
-    startPoint.y = event.changedTouches[0].pageY;
-    ldelay = new Date();
-}
-function helpTouchEnd(event) {
-    var pdelay = new Date();
-    nowPoint = event.changedTouches[0];
-    var xAbs = Math.abs(startPoint.x - nowPoint.pageX);
-    var yAbs = Math.abs(startPoint.y - nowPoint.pageY);
-    var right = '100%';
-
-    if ((xAbs > 20 || yAbs > 20)) {
-        if (xAbs > (yAbs * 5)) {
-            if (xAbs > 130) {
-                if (nowPoint.pageX > startPoint.x) {
-                    $('#help-modal').animate({
-                        right: (window.innerWidth * (-1)),
-                        left: window.innerWidth
-                    }, 500);
-                    $('#help-modal').queue(function() {
-                        OnCloseHelpModal();
-                        $('#help-modal').css({
-                            right: '0',
-                            left: '100%'
-                        });
-                        $('#help-modal').dequeue();
-                    });
-                }
-            } else {
-                $('#help-modal').animate({
-                    left: 0,
-                    right: 0
-                }, 500);
-            }
-        } else {
-            $('#help-modal').animate({
-                left: 0,
-                right: 0
-            }, 500);
-        }
-    }
-}
 //Закрытие окна помощи
 function OnCloseHelpModal() {
     $('.help-content').empty();

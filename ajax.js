@@ -1474,105 +1474,95 @@ function getPanoByCategoryId(itemId) {
 
 //Ajax загрузка информации об объекте
 function getAboutObjectInfo(showFeedBack){
-	if (!$.cookie('object_info')) {
-		$.cookie('object_info', true, {
-				expires: 300,
-				path: '/'
-		});
-		$('#about-object-btn div').remove();
+	document.getElementById('about-object-body').innerHTML += preloader;
+
+    if (!$.cookie('object_info')) {
+        $.cookie('object_info', true, {
+                expires: 300,
+                path: '/'
+        });
+        if (document.getElementById('about-object-btn div'))
+            document.getElementById('about-object-btn div').remove();
     }
-    if($('#search-panel').hasClass('open')){
-		OnCloseSearchPanel(false);
-	}
-	if(showFeedBack){
-		ga('send', 'event', 'Button', 'Click', 'FeedBack Button Click');
-	}
-	else{
-		ga('send', 'event', 'Button', 'Click', 'Open Object Info');
-	}
-	$('.object-location').show();
+    if(document.getElementById('search-panel').classList.contains('open'))
+        OnCloseSearchPanel(false);
+    if(showFeedBack)
+        ga('send', 'event', 'Button', 'Click', 'FeedBack Button Click');
+    else
+        ga('send', 'event', 'Button', 'Click', 'Open Object Info');
+
+	document.querySelector('.object-location').style.display = '';
     OnShowHideControls(true, false);
-    var cultureKey = getUrlVars()["lang"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    var aboutContent = $('.about-object-content');
-    var panoId = getUrlVars()["p"];
-    if (typeof panoId === 'undefined' || panoId === null) {
-        panoId = 1;
-    } else {
-        panoId = getUrlVars()["p"].split('-')[0];
-    }
-    $('.about-object-modal').queue(function() {
-		$('.about-object-modal').animate({right: 0}, 500);
-		$.ajax({
+
+    var cultureKey = getUrlVars()["lang"] || 'en';
+    var aboutContent = $('.about-object-content'); // jq variable --------------
+    var panoId = getUrlVars()["p"].split('-')[0] || 1;
+    
+    // ---
+    
+	$('.about-object-modal').animate({right: 0}, 500);
+	$.ajax({
         url: 'https://thai.hub360.info/api/get-about-object-info',
         data: {
             itemId: panoId,
             lang: cultureKey,
 			rand: getRandom()
         },
-        beforeSend: function() {
-            $('#about-object-body').append(preloader);
-        },
         success: function(data) {
 			$('#about-object-body #loader').remove();
+			
+// 			remove it later ------------
             var album = data.gallery;
             var news = data.news;
 			var placeId = data.placeId;
-            var counter = 4;
-			if(data.type == 2){
-				$('#booking-block h3').text(translation.Get_Special_Offer(cultureKey));
-			}
-			else if(data.type == 1){
-				$('#booking-block h3').text(translation.Get_Personal_Offer(cultureKey));
-			}
-			else{
-				$('#booking-block h3').text(translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey));
-			}
-            $('#aboutObjectTitle').text(data.title);
+			
+			document.querySelector('#booking-block h3').textContent = 
+                data.type == 2 ? translation.Get_Special_Offer(cultureKey)
+                    : data.type == 1 ? translation.Get_Personal_Offer(cultureKey)
+                        : translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey);
+                        
+            document.getElementById('aboutObjectTitle').textContent = data.title;
+            
 			if(!showFeedBack){
-				var bodyTitle = data.bodytitle;
-				if(bodyTitle){
-					$('.about-object-content .object-content').append('<h2>' + bodyTitle + '</h2>');
-				}
+				if(data.bodyTitle)
+                    document.querySelector('.about-object-content .object-content').innerHTML += '<h2>' + data.bodyTitle + '</h2>';
 			if(data.rent_table){
-				var lowSeason = data.low_season;
-				var highSeason = data.high_season;
-				var peakSeason = data.peak_season;
-				var longTermMin = parseInt(data.long_term_min);
-				$('.about-object-content .object-content').append('<table class="rent-table"><tbody>\
-					<tr>\
-						<td></td>\
-						<td>' + translation.Daily_Rent_Table(cultureKey) + '</td>\
-						<td>' + translation.Weekly_Rent_Table(cultureKey) + '</td>\
-						<td>' + translation.Monthly_Rent_Table(cultureKey) + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.Low_Season(cultureKey) + '<br /><small>' + getAllMonth(lowSeason, cultureKey).replace(', ', ' - ') + '</small></td>\
-						<td>' + (data.low_season_daily ? data.low_season_daily + ' ฿' : '') + '</td>\
-						<td>' + (data.low_season_weekly ? data.low_season_weekly + ' ฿' : '') + '</td>\
-						<td>' + (data.low_season_monthly ? data.low_season_monthly + ' ฿' : '') + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.High_Season(cultureKey) + '<br /><small>' + getAllMonth(highSeason, cultureKey) + '</small></td>\
-						<td>' + (data.high_season_daily ? data.high_season_daily + ' ฿' : '') + '</td>\
-						<td>' + (data.high_season_weekly ? data.high_season_weekly + ' ฿' : '') + '</td>\
-						<td>' + (data.high_season_monthly ? data.high_season_monthly + ' ฿' : '') + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.Peak_Season(cultureKey) + '<br /><small>' + getAllMonth(peakSeason, cultureKey) + '</small></td>\
-						<td>' + (data.peak_season_daily ? data.peak_season_daily + ' ฿' : '') + '</td>\
-						<td>' + (data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '') + '</td>\
-						<td>' + (data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '') + '</td>\
-					</tr>\
-					<tr>\
-						<td>' + translation.Long_Term(cultureKey) + '<br><small>' + translation.Get_Min_Rent(longTermMin, cultureKey) + '</small></td>\
-						<td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>\
-						<td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>\
-						<td>' + (data.long_term ? data.long_term + ' ฿' : '') + '</td>\
-					</tr>\
-					</tbody></table>');
+				document.querySelector('.about-object-content .object-content').innerHTML += `<table class="rent-table"><tbody>
+                        <tr>
+                            <td></td>
+                            <td>${translation.Daily_Rent_Table(cultureKey)}</td>
+                            <td>${translation.Weekly_Rent_Table(cultureKey)}</td>
+                            <td>${translation.Monthly_Rent_Table(cultureKey)}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.Low_Season(cultureKey)}<br/>
+                                <small>${getAllMonth(data.low_season, cultureKey).replace(', ', ' - ')}</small></td>
+                            <td>${(data.low_season_daily ? data.low_season_daily + ' ฿' : '')}</td>
+                            <td>${(data.low_season_weekly ? data.low_season_weekly + ' ฿' : '')}</td>
+                            <td>${(data.low_season_monthly ? data.low_season_monthly + ' ฿' : '')}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.High_Season(cultureKey)}<br />
+                                <small>${getAllMonth(data.high_season, cultureKey)}</small></td>
+                            <td>${(data.high_season_daily ? data.high_season_daily + ' ฿' : '')}</td>
+                            <td>${(data.high_season_weekly ? data.high_season_weekly + ' ฿' : '')}</td>
+                            <td>${(data.high_season_monthly ? data.high_season_monthly + ' ฿' : '')}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.Peak_Season(cultureKey)}<br />
+                                <small>${getAllMonth(data.peak_season, cultureKey)}</small></td>
+                            <td>${(data.peak_season_daily ? data.peak_season_daily + ' ฿' : '')}</td>
+                            <td>${(data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '')}</td>
+                            <td>${(data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '')}</td>
+                        </tr>
+                        <tr>
+                            <td>${translation.Long_Term(cultureKey)}<br>
+                                <small>${translation.Get_Min_Rent(parseInt(data.long_term_min), cultureKey)}</small></td>
+                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
+                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
+                            <td>${(data.long_term ? data.long_term + ' ฿' : '')}</td>
+                        </tr>
+                    </tbody></table>`;
 			}
             $('.object-content').append(data.content).find('table').wrap('<div class="table-responsive"></div>');
             $('.about-object-content svg').remove();
@@ -1633,28 +1623,22 @@ function getAboutObjectInfo(showFeedBack){
 			if(!showFeedBack){
 				if(placeId || parseInt($('#search-panel').attr('data-latitude')) != 0){
 					setTimeout(function(){
-						if(placeId){
+						if(placeId)
 							initMapMarker(placeId, 'object-location');
-						}
-						else{
+						else
 							initMap('object-location');
-						}
 					}, 1000);
 				}
-				else{
+				else
 					$('.object-location').hide();
-				}
 			}
-			else{
+			else
 				$('.object-location').hide();
-			}
         }
     }).done(function() {
 		aboutContent.fadeIn(500);
         panoIsLoad = false;
         loadGallery = true;
-    });
-    $('.about-object-modal').dequeue();
     });
 }
 
@@ -1749,6 +1733,39 @@ function fetchComplete() {
         }
     });
 };
+
+//Функция по завершению ajax загрузки
+$(document).ajaxComplete(function() {
+    if (panoIsLoad) {
+        xmlParser(panoVrXml);
+        panoIsLoad = false;
+    }
+    if (loadGallery) {
+        setTimeout(function(){myCarouselInit();loadGallery = false;}, 100)
+    }
+    if ($('#mobile-map-search-btn').hasClass('active')) {
+        initMap();
+    }
+    jQuery('.site-search-results').not('.scroll-wrapper').on("scroll", function() {
+        var category = $('.search-logo').attr('data-id');
+        var isFolder = parseInt($('.search-logo').attr('data-isfolder'));
+        var scrollBodyHeight = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-element_outer').height());
+        var scrollBarHeight = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-bar').height());
+        var scrollBarPosition = parseInt($('.scroll-wrapper.site-search-results.scrollbar-inner .scroll-y .scroll-bar').css('top'));
+		    var exclude = GetExludeObjects(true);
+		    var count = getObjectsCount();
+		    var title = $('#search').val();
+        if ((scrollBarHeight + scrollBarPosition) == scrollBodyHeight && isLoaded && scrollBodyHeight > 100) {
+            isLoaded = false;
+			if(title.length > 1){
+				OnAjaxSearch(title, true, count, exclude);
+			}
+			else{
+				OnLoadObjects(category, count);
+			}
+        }
+    });
+});
 
 //Получение координат панораммы из xml файла
 function xmlParser(xmlUrl) {
