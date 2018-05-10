@@ -1121,30 +1121,177 @@ function OnLoadNews(offset) {
 }
 
 
+//Ajax загрузка информации об объекте
+function getAboutObjectInfo(showFeedBack){
+	document.getElementById('about-object-body').innerHTML += preloader;
 
+    if (!$.cookie('object_info')) {
+        $.cookie('object_info', true, {
+                expires: 300,
+                path: '/'
+        });
+        if (document.getElementById('about-object-btn div'))
+            document.getElementById('about-object-btn div').remove();
+    }
+    if(document.getElementById('search-panel').classList.contains('open'))
+        OnCloseSearchPanel(false);
+    if(showFeedBack)
+        ga('send', 'event', 'Button', 'Click', 'FeedBack Button Click');
+    else
+        ga('send', 'event', 'Button', 'Click', 'Open Object Info');
 
+	document.querySelector('.object-location').style.display = '';
+    OnShowHideControls(true, false);
 
+    var cultureKey = getUrlVars()["lang"] || 'en';
+    var aboutContent = $('.about-object-content'); // jq variable --------------
+    var panoId = getUrlVars()["p"].split('-')[0] || 1;
+    
+    // ---
+    
+	$('.about-object-modal').animate({right: 0}, 500);
+	
+	let url = `https://thai.hub360.info/api/get-about-object-info?lang=${cultureKey}&itemId=${panoId}&rand=${getRandom()}`;
 
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            $('#about-object-body #loader').remove();
+			
+			document.querySelector('#booking-block h3').textContent = 
+                data.type == 2 ? translation.Get_Special_Offer(cultureKey)
+                    : data.type == 1 ? translation.Get_Personal_Offer(cultureKey)
+                        : translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey);
+                        
+            document.getElementById('aboutObjectTitle').textContent = data.title;
+            
+			if(!showFeedBack){
+				if(data.bodyTitle)
+                    document.querySelector('.about-object-content .object-content').innerHTML += '<h2>' + data.bodyTitle + '</h2>';
+                if(data.rent_table){
+                    document.querySelector('.about-object-content .object-content').innerHTML += `<table class="rent-table"><tbody>
+                            <tr>
+                                <td></td>
+                                <td>${translation.Daily_Rent_Table(cultureKey)}</td>
+                                <td>${translation.Weekly_Rent_Table(cultureKey)}</td>
+                                <td>${translation.Monthly_Rent_Table(cultureKey)}</td>
+                            </tr>
+                            <tr>
+                                <td>${translation.Low_Season(cultureKey)}<br/>
+                                    <small>${getAllMonth(data.low_season, cultureKey).replace(', ', ' - ')}</small></td>
+                                <td>${(data.low_season_daily ? data.low_season_daily + ' ฿' : '')}</td>
+                                <td>${(data.low_season_weekly ? data.low_season_weekly + ' ฿' : '')}</td>
+                                <td>${(data.low_season_monthly ? data.low_season_monthly + ' ฿' : '')}</td>
+                            </tr>
+                            <tr>
+                                <td>${translation.High_Season(cultureKey)}<br />
+                                    <small>${getAllMonth(data.high_season, cultureKey)}</small></td>
+                                <td>${(data.high_season_daily ? data.high_season_daily + ' ฿' : '')}</td>
+                                <td>${(data.high_season_weekly ? data.high_season_weekly + ' ฿' : '')}</td>
+                                <td>${(data.high_season_monthly ? data.high_season_monthly + ' ฿' : '')}</td>
+                            </tr>
+                            <tr>
+                                <td>${translation.Peak_Season(cultureKey)}<br />
+                                    <small>${getAllMonth(data.peak_season, cultureKey)}</small></td>
+                                <td>${(data.peak_season_daily ? data.peak_season_daily + ' ฿' : '')}</td>
+                                <td>${(data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '')}</td>
+                                <td>${(data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '')}</td>
+                            </tr>
+                            <tr>
+                                <td>${translation.Long_Term(cultureKey)}<br>
+                                    <small>${translation.Get_Min_Rent(parseInt(data.long_term_min), cultureKey)}</small></td>
+                                <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
+                                <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
+                                <td>${(data.long_term ? data.long_term + ' ฿' : '')}</td>
+                            </tr>
+                        </tbody></table>`;
+                }
+                
+                document.querySelector('.object-content').innerHTML += data.content;
+                if (document.querySelector('.object-content table')) {
+                    let temp = document.querySelector('.object-content table').parentElement;
+                    temp.innerHTML = '<div class="table-responsive">' + temp.innerHTML + '</div>';
+                }
+                
+                $('.about-object-content svg').remove(); // --------------
+                
+                if (data.video) {
+                    document.querySelector('.owl-main').innerHTML += `<div class="gallery-item video-item" style="display: none;">
+                            <iframe src="https://www.youtube.com/embed/${data.video}" frameborder="0" style="border:0;"></iframe></div>`;
+                    document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
+                            <div class="gallery-item" style="background-image: url(https://img.youtube.com/vi/${data.video}/hqdefault.jpg);"></div>
+                        </div>`;
+                }
+                
+                document.querySelector('.owl-main').innerHTML += `<a class="fancybox" data-fancybox="gallery" 
+                        href="${data.fullImage}" title="${data.title}">
+                            <div class="gallery-item" style="background-image: url(${data.image});display: none;"></div>
+                    </a>`;
+                document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
+                        <div class="gallery-item" style="background-image: url(${data.image});"></div></div>`;
+                        
+                if (data.gallery) {
+                    for (const galleryItem of data.gallery) {
+                        document.querySelector('.owl-main').innerHTML += `<a class="fancybox" data-fancybox="gallery" 
+                                href="${galleryItem.url}" title="${data.title}">
+                                    <div class="gallery-item" style="background-image: url(${galleryItem.thumbUrl});display: none;"></div>
+                            </a>`;
+                        document.querySelector('.owl-navigation-body .owl-stage').innerHTML += `<div class="owl-item">
+                                <div class="gallery-item" style="background-image: url(${galleryItem.thumbUrl});"></div></div>`;
+                    };
+                    document.querySelector('.owl-navigation').innerHTML += `<div class="owl-prev" id="owl-prev">
+                            </div><div class="owl-next" id="owl-next"></div>`;
+                }
+                
+                if (data.news.length >= 1 && !data.isCity) {
+                    if (data.isFeedBack) {
+                        document.querySelectorAll('#gallery-block, #news-block, #booking-block').forEach(node =>
+                            node.classList.add('col-sm-4'));
+                        document.getElementById('booking-block').style.display = '';
+                    } else
+                        document.querySelectorAll('#gallery-block, #news-block').forEach(node => 
+                            node.classList.add('col-sm-6'));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ---------------------- ф-ю ниже я НЕ ТЕСТИРОВАЛ - не триггерится ------------------------
+                    document.getElementById('news-block').innerHTML = '<h3>' + translation.Object_News_Title(cultureKey) + '</h3>';
+                    for (const itemNew of data.news) {
+                        document.getElementById('news-block').innerHTML += `<div class="item-new" data-id="${itemNew.itemId}">
+                                    <h4>${itemNew.title}</h4>
+                                    <img src="${itemNew.imageUrl}" />
+                                    <p>${itemNew.introtext}</p>
+                                </div>`;
+                    }
+                } else {
+                    if (data.isFeedBack) {
+                        document.querySelectorAll('#gallery-block, #booking-block').forEach(node => 
+                            node.classList.add('col-sm-6'));
+                        document.getElementById('booking-block').style.display = '';
+                    } else
+                        document.getElementById('gallery-block').classList.add('col-sm-6', 'col-sm-offset-3');
+                    document.getElementById('news-block').classList.add('hidden');
+                }
+            } else {
+                document.getElementById('booking-block').classList.add('col-sm-6', 'col-sm-offset-3');
+                document.getElementById('booking-block').style.display = '';
+            }
+            document.querySelector('.about-object-close-btn').style.display = '';
+            if(!showFeedBack){
+                if(data.placeId || parseInt(document.getElementById('search-panel').getAttribute('data-latitude')) != 0){
+                    // check
+                    setTimeout(() => data.placeId ? initMapMarker(data.placeId, 'object-location')
+                        : initMap('object-location')
+                    , 1000);
+                } else
+                    document.querySelector('.object-location').style.display = 'none';
+            } else
+                document.querySelector('.object-location').style.display = 'none';
+        })
+        .then(() => {
+            aboutContent.fadeIn(500);
+            panoIsLoad = false;
+            loadGallery = true;
+            fetchComplete();
+        })
+}
 
 // подгрузчик обектов(Изначально загружается 10 объектов при пролистывании запускается эта функция и подгружаются еще 10 объектов ну или сколько есть)
 function OnLoadObjects(category, offset) {
@@ -1349,300 +1496,7 @@ function OnLoadObjects(category, offset) {
     .catch(error => console.log(error));
 }
 
-
-//Ajax загрузка случайной панорамы по id категории
-function getPanoByCategoryId(itemId) {
-	clearTimeout(videoTimeOut);
-    panoIsLoad = false;
-    $('#day-night-btn div').remove().hide();
-    $('#video-object-btn div, #about-object-btn div').remove();
-    var krpano = document.getElementById("krpanoSWFObject");
-    var cultureKey = getUrlVars()["lang"];
-    var panoContainer = $('#tourDIV');
-    var videoContainer = $('.video-modal-content');
-    var panoLocation = $('#panoLocation');
-    var categoryId = getUrlVars()["c"];
-	if(typeof cultureKey === 'undefined'){
-		cultureKey = 'en';
-	}
-    $.ajax({
-        url: 'https://thai.hub360.info/api/get-object-by-category',
-        data: {
-            itemId: itemId,
-            lang: cultureKey,
-            categoryId: categoryId,
-			rand: getRandom()
-        },
-        beforeSend: function() {},
-        success: function(data) {
-            var itemObject = data.item;
-            var isFolder = data.isfolder;
-            for (key in itemObject) {
-                var item = itemObject[key];
-                var player = $('.audio-player .play-list');
-                var audioLink = item.audioLink;
-                var audioFiles = item.audioFiles.split(',');
-                if (audioLink == musicLink) {} else {
-                    musicLink = audioLink;
-                    player.empty();
-                    audioFiles.forEach(function(item) {
-                        player.append('<li data-link="' + item + '"></li>');
-                    });
-                    $('#stop-play').addClass('first-click');
-                    if ($('#stop-play').hasClass('active')) {
-                        $('#stop-play').click();
-                        setTimeout(function() {
-                            $('#stop-play').click();
-                        }, 2000);
-                    }
-                }
-                panoUrl = item.panoUrl + 'indexdata/index_messages_en.xml';
-                panoVrXml = item.panoUrl + 'indexdata/index_vr.xml';
-				panoXml = item.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
-                panoSwf = item.panoUrl + 'indexdata/index.swf';
-                crossPanoUrl = item.panoUrl;
-                mapTitle = item.longtitle;
-				var mainPanoLink = parseInt(item.mainPanoLink) == 0 ? item.mainPanoLink : item.mainPanoLink + '&lang=' + cultureKey;
-                if (firstLoad && $.cookie('video_' + item.id) && (item.video == null || item.video == '' || item.video == undefined || parseInt(item.video) == 0)){}else{
-                    videoTimeOut = setTimeout(function() {
-                        $('#video-object-btn').append('<div class="animation-border"></div>\
-										<div class="animation-background"></div>\
-										<div class="btn-animation"></div>');
-                    }, 10000);
-                }
-                if ((!firstLoad) && (!$.cookie('object_info'))) {
-                    $('#about-object-btn').append('<div class="animation-border"></div>\
-													<div class="animation-background"></div>\
-													<div class="btn-animation"></div>');
-                }
-                if (!$.cookie('day_night_' + itemId)) {
-                    $('#day-night-btn').append('<div class="animation-border"></div>\
-													<div class="animation-background"></div>\
-													<div class="btn-animation"></div>');
-                }
-                if (!$.cookie('object_' + itemId)) {
-                    $.cookie('object_' + itemId, true, {
-                        expires: 300,
-                        path: '/'
-                    });
-                }
-                $('.search-logo, .logo').attr('href', item.parentPoint + '&lang=' + cultureKey);
-                $('title').text(data.title + ' - ' + siteName);
-
-                $("meta[name='title']").attr('content', data.title + ' - ' + siteName);
-                $("meta[property='og:title']").attr('content', data.title + ' - ' + siteName);
-                
-                $("meta[name='description']").attr('content', data.description);
-                $("meta[property='og:description']").attr('content', data.description);
-                
-                $("meta[property='og:image']").attr('content', data.image);
-                $("meta[property='og:image:secure_url']").attr('content', data.image);
-                $("meta[name='twitter:image']").attr('content', data.image);
-                
-                $("link[rel='image_src']").attr('href', data.image);
-                $("link[rel='alternate']").attr('hreflang', cultureKey).attr('href', window.location.href);
-                $("meta[property='og:url']").attr('content', window.location.href);
-                $("meta[name='keywords']").attr('content', data.keywords);
-                $('#home-btn').attr('data-link', mainPanoLink);
-                
-                isVRModeRequested() ? accessWebVr() : accessStdVr();
-
-                $('#video-object-btn').attr('data-code', item.video || 0); // check
-
-                if (data.template == 3) {
-                    panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + item.title + '</span>');
-                } else {
-                    panoLocation.empty().html(`${translation.Thailand(cultureKey)}<br><span>
-                                ${item.location}<br>${item.longtitle + (item.isRealEstate == true ? ' ID: ' + item.id : '')}
-                            </span>`);
-                }
-            }
-            OnCategorySearch(categoryId, itemId, isFolder, '');
-        }
-    }).done(function() {
-        panoIsLoad = true;
-		if(!firstLoad){
-			ga('create', 'UA-90941148-2', 'auto', 'myAnalytics');
-			ga('myAnalytics.send', 'pageview', location.pathname + location.search + location.hash);
-			ga('myAnalytics.remove');
-		}
-		else{
-			firstLoad = false;
-		}
-    });
-}
-
-//Ajax загрузка информации об объекте
-function getAboutObjectInfo(showFeedBack){
-	document.getElementById('about-object-body').innerHTML += preloader;
-
-    if (!$.cookie('object_info')) {
-        $.cookie('object_info', true, {
-                expires: 300,
-                path: '/'
-        });
-        if (document.getElementById('about-object-btn div'))
-            document.getElementById('about-object-btn div').remove();
-    }
-    if(document.getElementById('search-panel').classList.contains('open'))
-        OnCloseSearchPanel(false);
-    if(showFeedBack)
-        ga('send', 'event', 'Button', 'Click', 'FeedBack Button Click');
-    else
-        ga('send', 'event', 'Button', 'Click', 'Open Object Info');
-
-	document.querySelector('.object-location').style.display = '';
-    OnShowHideControls(true, false);
-
-    var cultureKey = getUrlVars()["lang"] || 'en';
-    var aboutContent = $('.about-object-content'); // jq variable --------------
-    var panoId = getUrlVars()["p"].split('-')[0] || 1;
-    
-    // ---
-    
-	$('.about-object-modal').animate({right: 0}, 500);
-	$.ajax({
-        url: 'https://thai.hub360.info/api/get-about-object-info',
-        data: {
-            itemId: panoId,
-            lang: cultureKey,
-			rand: getRandom()
-        },
-        success: function(data) {
-			$('#about-object-body #loader').remove();
-			
-// 			remove it later ------------
-            var album = data.gallery;
-            var news = data.news;
-			var placeId = data.placeId;
-			
-			document.querySelector('#booking-block h3').textContent = 
-                data.type == 2 ? translation.Get_Special_Offer(cultureKey)
-                    : data.type == 1 ? translation.Get_Personal_Offer(cultureKey)
-                        : translation.Fill_Out_Form_And_Get_Special_Offer(cultureKey);
-                        
-            document.getElementById('aboutObjectTitle').textContent = data.title;
-            
-			if(!showFeedBack){
-				if(data.bodyTitle)
-                    document.querySelector('.about-object-content .object-content').innerHTML += '<h2>' + data.bodyTitle + '</h2>';
-			if(data.rent_table){
-				document.querySelector('.about-object-content .object-content').innerHTML += `<table class="rent-table"><tbody>
-                        <tr>
-                            <td></td>
-                            <td>${translation.Daily_Rent_Table(cultureKey)}</td>
-                            <td>${translation.Weekly_Rent_Table(cultureKey)}</td>
-                            <td>${translation.Monthly_Rent_Table(cultureKey)}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.Low_Season(cultureKey)}<br/>
-                                <small>${getAllMonth(data.low_season, cultureKey).replace(', ', ' - ')}</small></td>
-                            <td>${(data.low_season_daily ? data.low_season_daily + ' ฿' : '')}</td>
-                            <td>${(data.low_season_weekly ? data.low_season_weekly + ' ฿' : '')}</td>
-                            <td>${(data.low_season_monthly ? data.low_season_monthly + ' ฿' : '')}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.High_Season(cultureKey)}<br />
-                                <small>${getAllMonth(data.high_season, cultureKey)}</small></td>
-                            <td>${(data.high_season_daily ? data.high_season_daily + ' ฿' : '')}</td>
-                            <td>${(data.high_season_weekly ? data.high_season_weekly + ' ฿' : '')}</td>
-                            <td>${(data.high_season_monthly ? data.high_season_monthly + ' ฿' : '')}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.Peak_Season(cultureKey)}<br />
-                                <small>${getAllMonth(data.peak_season, cultureKey)}</small></td>
-                            <td>${(data.peak_season_daily ? data.peak_season_daily + ' ฿' : '')}</td>
-                            <td>${(data.peak_season_weekly ? data.peak_season_weekly + ' ฿' : '')}</td>
-                            <td>${(data.peak_season_monthly ? data.peak_season_monthly + ' ฿' : '')}</td>
-                        </tr>
-                        <tr>
-                            <td>${translation.Long_Term(cultureKey)}<br>
-                                <small>${translation.Get_Min_Rent(parseInt(data.long_term_min), cultureKey)}</small></td>
-                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
-                            <td style="border: 1px solid transparent!important;border-bottom: 1px solid rgba(221, 221, 221, 0.5)!important;"></td>
-                            <td>${(data.long_term ? data.long_term + ' ฿' : '')}</td>
-                        </tr>
-                    </tbody></table>`;
-			}
-            $('.object-content').append(data.content).find('table').wrap('<div class="table-responsive"></div>');
-            $('.about-object-content svg').remove();
-            if (data.video == null || data.video == '' || data.video == undefined || parseInt(data.video) == 0) {} else {
-                $('.owl-main').append('<div class="gallery-item video-item" style="display: none;"><iframe src="https://www.youtube.com/embed/' + data.video + '" frameborder="0" style="border:0;"></iframe></div>');
-                $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item" style="background-image: url(https://img.youtube.com/vi/' + data.video + '/hqdefault.jpg);"></div></div>');
-            }
-            $('.owl-main').append('<a class="fancybox" data-fancybox="gallery" href="' + data.fullImage + '" title="' + data.title + '"><div class="gallery-item" style="background-image: url(' + data.image + ');display: none;"></div></a>');
-            $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item"  style="background-image: url(' + data.image + ');"></div></div>');
-            if (album) {
-                for (key in album) {
-                    var galleryItem = album[key];
-                    $('.owl-main').append('<a class="fancybox" data-fancybox="gallery" href="' + galleryItem.url + '" title="' + data.title + '"><div class="gallery-item" style="background-image: url(' + galleryItem.thumbUrl + ');display: none;"></div></a>');
-                    $('.owl-navigation-body .owl-stage').append('<div class="owl-item"><div class="gallery-item" style="background-image: url(' + galleryItem.thumbUrl + ');"></div></div>');
-                };
-				$('.owl-navigation').append('<div class="owl-prev" id="owl-prev"></div><div class="owl-next" id="owl-next"></div>');
-            }
-            if (news.length >= 1 && !data.isCity) {
-                if (data.isFeedBack) {
-                    $('#gallery-block, #news-block, #booking-block').addClass('col-sm-4');
-					// if(data.special_offer){
-						// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
-					// }
-                    $('#booking-block').show();
-                } else {
-                    $('#gallery-block, #news-block').addClass('col-sm-6');
-                }
-                $('#news-block').empty().append('<h3>' + translation.Object_News_Title(cultureKey) + '</h3>');
-                for (key in news) {
-                    var itemNew = news[key];
-                    $('#news-block').append('<div class="item-new" data-id="' + itemNew.itemId + '">\
-								<h4>' + itemNew.title + '</h4>\
-								<img src="' + itemNew.imageUrl + '" />\
-								<p>' + itemNew.introtext + '</p>\
-							</div>');
-                }
-            } else {
-                if (data.isFeedBack) {
-                    $('#gallery-block, #booking-block').addClass('col-sm-6');
-					// if(data.special_offer){
-						// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
-					// }
-                    $('#booking-block').show();
-                } else {
-                    $('#gallery-block').addClass('col-sm-6 col-sm-offset-3');
-                }
-                $('#news-block').addClass('hidden');
-            }
-			}
-			else{
-				$('#booking-block').addClass('col-sm-6 col-sm-offset-3');
-				// if(data.special_offer){
-					// $('<div class="special-offer">' + data.special_offer + '</div>').insertAfter('#booking-block h3');
-				// }
-                $('#booking-block').show();
-			}
-			$('.about-object-close-btn').show();
-			if(!showFeedBack){
-				if(placeId || parseInt($('#search-panel').attr('data-latitude')) != 0){
-					setTimeout(function(){
-						if(placeId)
-							initMapMarker(placeId, 'object-location');
-						else
-							initMap('object-location');
-					}, 1000);
-				}
-				else
-					$('.object-location').hide();
-			}
-			else
-				$('.object-location').hide();
-        }
-    }).done(function() {
-		aboutContent.fadeIn(500);
-        panoIsLoad = false;
-        loadGallery = true;
-    });
-}
-
-//Ajax загрузка контента объекта(например открытие окна с новостью)
+// загрузка контента объекта(например открытие окна с новостью)
 function getInnerContent() {
     var cultureKey = getUrlVars()["lang"] || 'en',
         innerContainer = document.querySelector('.inner-content'),
@@ -1675,7 +1529,7 @@ function getInnerContent() {
         });   
 }
 
-//Ajax загрузка и открытие окна help
+// загрузка и открытие окна help
 function getHelpInfo(dataId) {
     var cultureKey = getUrlVars()["lang"] || 'en';
     OnShowHideControls(true, false);
@@ -1693,7 +1547,6 @@ function getHelpInfo(dataId) {
         .then(response => response.json())
         .then(data => {
             document.querySelector('.help-content svg').remove();
-            console.log(data.conetnt);
             helpContainer.innerHTML += `<h2>${data.title}</h2><div>${data.content}</div>`;
         })
         .then(() => {
@@ -1702,17 +1555,14 @@ function getHelpInfo(dataId) {
         });    
 }
 
-
-
-
-//Функция по завершению ajax загрузки
+//Функция по завершению fetch'a
 function fetchComplete() {
     if (panoIsLoad) {
         xmlParser(panoVrXml);
         panoIsLoad = false;
     }
     if (loadGallery)
-        setTimeout(function(){myCarouselInit();loadGallery = false;}, 100)
+        setTimeout(function(){myCarouselInit();loadGallery = false;}, 100);
     if ($('#mobile-map-search-btn').hasClass('active'))
         initMap();
 
@@ -1733,6 +1583,150 @@ function fetchComplete() {
         }
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Ajax загрузка случайной панорамы по id категории
+function getPanoByCategoryId(itemId) {
+	clearTimeout(videoTimeOut);
+    panoIsLoad = false;
+
+    document.querySelector('#day-night-btn div').remove(); // hide?
+    
+    document.querySelectorAll('#video-object-btn div, #about-object-btn div').forEach(node => 
+        node.remove());
+
+    var krpano = document.getElementById("krpanoSWFObject"),
+        cultureKey = getUrlVars()["lang"],
+        panoContainer = $('#tourDIV'),
+        videoContainer = $('.video-modal-content'),
+        panoLocation = $('#panoLocation'),
+        categoryId = getUrlVars()["c"] || 'en';
+
+    let url = `https://thai.hub360.info/api/get-object-by-category?lang=${cultureKey}&itemId=${itemId}&categoryId=${categoryId}&rand=${getRandom()}`;
+        
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            for (const item of data.item) {
+                var player = document.querySelector('.audio-player .play-list');
+                var audioFiles = item.audioFiles.split(',');
+                if (item.audioLink != musicLink) {
+                    musicLink = item.audioLink;
+                    player.innerHTML = '';
+                    audioFiles.forEach((item) =>
+                        player.innerHTML += '<li data-link="' + item + '"></li>');
+
+                    document.getElementById('stop-play').classList.add('first-click');
+                    if (document.getElementById('stop-play').classList.contains('active')) {
+                        // check BOTH
+                        document.getElementById('stop-play').click();
+                        setTimeout(() => document.getElementById('stop-play').click(), 2000);
+                    }
+                }
+
+                // not used (not found..)
+                panoUrl = item.panoUrl + 'indexdata/index_messages_en.xml';
+                panoVrXml = item.panoUrl + 'indexdata/index_vr.xml';
+				panoXml = item.panoUrl + 'indexdata/index_' + cultureKey + '.xml';
+                panoSwf = item.panoUrl + 'indexdata/index.swf';
+                crossPanoUrl = item.panoUrl;
+                mapTitle = item.longtitle;
+                
+				var mainPanoLink = parseInt(item.mainPanoLink) == 0 ? item.mainPanoLink : item.mainPanoLink + '&lang=' + cultureKey;
+                if (firstLoad && $.cookie('video_' + item.id) && (item.video))
+                    videoTimeOut = setTimeout(() => {
+                        document.getElementById('video-object-btn').innerHTML += `<div class="animation-border"></div>
+										<div class="animation-background"></div>
+										<div class="btn-animation"></div>`;
+                    }, 10000);
+
+                if ((!firstLoad) && (!$.cookie('object_info')))
+                    document.getElementById('about-object-btn').innerHTML += `<div class="animation-border"></div>
+													<div class="animation-background"></div>
+                                                    <div class="btn-animation"></div>`;
+                                                    
+                if (!$.cookie('day_night_' + itemId))
+                    document.getElementById('day-night-btn').innerHTML += `<div class="animation-border"></div>
+													<div class="animation-background"></div>
+                                                    <div class="btn-animation"></div>`;
+                                                    
+                if (!$.cookie('object_' + itemId)) {
+                    $.cookie('object_' + itemId, true, {
+                        expires: 300,
+                        path: '/'
+                    });
+                }
+
+                document.querySelectorAll('.search-logo, .logo').forEach(node =>
+                    node.setAttribute('href', item.parentPoint + '&lang=' + cultureKey));
+                document.title = data.title + ' - ' + siteName;
+
+                document.querySelectorAll("meta[property='og:title'], meta[name='title']").forEach(node => 
+                    node.setAttribute('content', data.title + ' - ' + siteName));
+                
+                $("meta[name='description']").attr('content', data.description);
+                $("meta[property='og:description']").attr('content', data.description);
+                
+                $("meta[property='og:image']").attr('content', data.image);
+                $("meta[property='og:image:secure_url']").attr('content', data.image);
+                $("meta[name='twitter:image']").attr('content', data.image);
+                
+                $("link[rel='image_src']").attr('href', data.image);
+                $("link[rel='alternate']").attr('hreflang', cultureKey).attr('href', window.location.href);
+                $("meta[property='og:url']").attr('content', window.location.href);
+                $("meta[name='keywords']").attr('content', data.keywords);
+                $('#home-btn').attr('data-link', mainPanoLink);
+                
+                isVRModeRequested() ? accessWebVr() : accessStdVr();
+
+                $('#video-object-btn').attr('data-code', item.video || 0); // check
+
+                if (data.template == 3) {
+                    panoLocation.empty().html(translation.Thailand(cultureKey) + '<br><span>' + item.title + '</span>');
+                } else {
+                    panoLocation.empty().html(`${translation.Thailand(cultureKey)}<br><span>
+                                ${item.location}<br>${item.longtitle + (item.isRealEstate == true ? ' ID: ' + item.id : '')}
+                            </span>`);
+                }
+            }
+            OnCategorySearch(categoryId, itemId, data.isfolder, '');
+        })
+        .then(function() {
+            panoIsLoad = true;
+            if(!firstLoad){
+                ga('create', 'UA-90941148-2', 'auto', 'myAnalytics');
+                ga('myAnalytics.send', 'pageview', location.pathname + location.search + location.hash);
+                ga('myAnalytics.remove');
+            }
+            else{
+                firstLoad = false;
+            }
+        });
+}
 
 //Функция по завершению ajax загрузки
 $(document).ajaxComplete(function() {
@@ -1801,8 +1795,7 @@ function getDistrictArray() {
         checkedDistricts.push('district==' + $(this).val());
     });
 
-    return checkedDistricts.length < 1 ? 0 
-            : checkedDistricts.join(',');
+    return checkedDistricts.length < 1 ? 0 : checkedDistricts.join(',');
 }
 
 //Получение кол-ва подгруженных обеъктов в окне поиска
