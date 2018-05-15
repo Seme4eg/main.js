@@ -134,10 +134,10 @@ document.addEventListener('DOMContentLoaded', function () {
             let panoId = getUrlVars()["p"] ? getUrlVars()["p"].split('-')[0] : 1;
             let categoryId = getUrlVars()["c"];
 
-            if (!categoryId) getPano(panoId); // ajax.js
+            if (!categoryId) loadPano(panoId); // ajax.js
             else {
                 categoryId = getUrlVars()["c"].split('-')[0];
-                getPanoByCategoryId(categoryId); // ajax.js
+                loadPano(categoryId, true); // ajax.js
             }
         }
     } else {
@@ -471,10 +471,10 @@ $(window).on('hashchange', function() {
     if (!!languageKey)
         $('html').attr('lang', languageKey);
     if (!categoryHashId) {
-        getPano(getUrlVars()["p"].split('-')[0]);
+        loadPano(getUrlVars()["p"].split('-')[0]);
     } else {
         categoryHashId = getUrlVars()["c"].split('-')[0];
-        getPanoByCategoryId(categoryHashId);
+        loadPano(categoryHashId, true);
         OnSearchPanelShow();
     }
 });
